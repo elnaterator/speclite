@@ -1,0 +1,16 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "speclite",
+  "description": "Lightweight spec-driven development workflow for Claude Code.",
+  "owner": {
+    "name": "Nathan Hadzariga"
+  },
+  "plugins": [
+    {
+      "name": "speclite",
+      "description": "Roadmap-driven dev workflow: init, plan, implement, review, commit. Simple, file-based, git-native.",
+      "source": "./",
+      "category": "workflow"
+    }
+  ]
+}

@@ -1,0 +1,177 @@
+# speclite — design questions
+
+Answer these before detailed implementation. Each has a **recommendation**. Edit answers
+inline (e.g. add `> ANSWER: ...`).
+
+---
+
+## A. Architecture
+
+### A1. CLI vs skill-only — where does logic live?
+design.md mixes CLI commands (`speclite init`, `speclite issues list`) with skill prompts
+that run raw git/grep/sed. Two models:
+- **(rec) Thin CLI + smart skills.** CLI only does deterministic file/config work (`init`,
+  `issues`). Skills do the git/grep/sed orchestration directly. Keeps skills inspectable,
+  CLI small, plugin usable without the binary for core flow.
+- Fat CLI. CLI does everything; skills just shell out to `speclite plan` etc. More testable,
+  but logic hidden from the model and harder to tweak per-repo.
+
+> **Recommendation:** Thin CLI + smart skills. CLI optional for the core plan/implement/commit loop.
+
+> ANSWER: Thin CLI + smart skills, but CLI will come later
+
+### A2. CLI implementation language
+Affects homebrew packaging.
+- **(rec) Go.** Single static binary, trivial homebrew bottle, no runtime dep. Best for "more repos" goal.
+- Bash. Zero build, but fragile for issue-store HTTP/JSON and cross-platform.
+- Node. Easy JSON/HTTP, but requires node runtime + heavier brew formula.
+
+> **Recommendation:** Go if issue-store integration ships; Bash if CLI stays trivial (just `init`).
+
+> ANSWER: Go, but we'll do this later
+
+### A3. Is the CLI even required for v1?
+`speclite init` could be done entirely by the `speclite-init` skill (mkdir + write templates).
+- **(rec) Skip CLI for v1.** Ship plugin only. Add CLI later for issue store. Simpler, faster, fewer install moving parts.
+
+> **Recommendation:** v1 = plugin only, no binary. Defer CLI + homebrew until issue store lands.
+
+> ANSWER: v1 = plugin only, no binary, defer CLI for now, but add CLI + homebrew to roadmap (specs/lite/roadmap.md)
+
+---
+
+## B. Workflow & conventions
+
+### B1. Roadmap item id format
+design.md uses `R\d\d\d` (R001).
+- **(rec)** Keep `R<NNN>`, zero-padded 3 digits, sequential, never reused.
+
+> ANSWER: use recommended
+
+### B2. Status encoding
+design.md uses title suffixes ` - PLANNED`, ` - DONE`.
+- **(rec)** Keep suffix convention; add implicit "backlog" = no suffix. Consider ` - WIP` between PLANNED and DONE? (proposed)
+
+> Question: want a WIP/in-progress status, or is branch-existence enough?
+
+> ANSWER: Let's have WIP as well as a status corresponding to completion of each step in the flow... (backlog) -> PLANNED -> WIP (implementation started) -> DONE (code complete, ready to commit).
+
+### B3. When is an item marked DONE?
+design.md marks DONE at end of **implement**. But there's also commit + optional review after.
+- **(rec)** Mark ` - DONE` at **commit/PR**, not implement. Implement → ` - WIP`. Avoids "done but unmerged".
+
+> Question: DONE on merge, on PR open, or on implement?
+
+> ANSWER: see previous question, DONE once implemented
+
+### B4. Branch naming
+design.md: `feat|fix/<seq_num>-<branch_name>`, with optional `<issue_id>`.
+- **(rec)** `<type>/R<NNN>-<slug>` and `<type>/R<NNN>-<issue_id>-<slug>` when issue present.
+  Confirm types beyond feat/fix (chore, docs, refactor?).
+
+> ANSWER: types: feat, fix, chore, docs, refactor... include any other recommended types
+
+### B5. One plan per item, or per branch?
+- **(rec)** One plan file per roadmap item: `specs/lite/<NNN>-<slug>-plan.md`. Matches design.md.
+
+> ANSWER: by default 1 roadmap item = 1 plan = 1 branch, this is normal flow, but not strict, can include multiple roadmap items in plan if requested, or multiple plans in branch if requested, be flexible with user request
+
+---
+
+## C. Skills scope
+
+### C1. Which skills ship in v1?
+- **(rec)** init, plan, implement, commit. Defer **review** (optional) and **roadmap/issues** (add-on).
+
+> ANSWER: init, plan, implement, commit.  Defer review and roadmap/issues.
+
+### C2. review skill — build it or reuse?
+You already have `/code-review` and `/review`.
+- **(rec)** Don't build a speclite review. `speclite-review` just delegates to `/code-review` scoped to the branch diff.
+
+> ANSWER: defer review step, may skip, will decide later
+
+### C3. commit skill — reuse git-helper?
+You have a `git-helper` skill and `caveman-commit`.
+- **(rec)** Reuse: `speclite-commit` calls git-helper for commit/branch/PR formatting; speclite only adds the roadmap-status update + plan-completeness check.
+
+> ANSWER: keep `speclite-commit` simple and ambiguous enough to also use git-helper or caveman-commit to format commit message when present, allows us to layer on additional instructions for speclite
+
+### C4. PR backend
+design.md says "github or bitbucket MCP".
+- **(rec)** Prefer `gh` CLI when present (no MCP setup); fall back to MCP. Bitbucket via MCP only.
+
+> ANSWER: Prefer `gh` for github, and `bkt` (https://github.com/avivsinai/bitbucket-cli) for bitbucket.  Note that bkt has a skill, but prob better to just add some basic instructions in our PR creation skill here.
+
+---
+
+## D. Issue store (optional add-on)
+
+### D1. Ship in v1 or defer?
+- **(rec)** Defer. Build core loop first; issue store is the natural v2.
+
+> ANSWER: Defer for now, will add later, include in roadmap
+
+### D2. Credential storage
+design.md: `~/.config/speclite/credentials` (e.g. Jira PAT).
+- **(rec)** Prefer OS keychain or env var (`SPECLITE_JIRA_TOKEN`); fall back to a 0600 file. Plain file = secret-on-disk risk.
+
+> **Security note:** confirm you want tokens in a flat file vs keychain/env before implementing.
+
+> ANSWER: Agreed, OS keychain or env var
+
+### D3. Stores supported
+- **(rec)** GitHub Issues first (you likely use gh already), Jira second, Bitbucket later.
+
+> ANSWER: Later, but add GitHub Issues and Jira in roadmap. No bitbucket for issues.
+
+---
+
+## E. Packaging & distribution
+
+### E1. Homebrew — formula vs cask vs tap?
+- **(rec)** Personal tap `nhadzariga/tap` with a formula. Only meaningful if CLI exists (see A3).
+  If plugin-only v1, distribute via Claude Code marketplace, not brew.
+
+> ANSWER: deferred, add to roadmap, but will go with recommended
+
+### E2. Plugin distribution
+- **(rec)** Publish to a marketplace repo; users `claude plugin install speclite@nhadzariga`. Confirm GitHub org/repo name.
+
+> ANSWER: deferred, add to roadmap, it's a maybe
+
+### E3. "Eventually plugin for more repos" — what does this mean?
+Clarify the goal:
+- (a) One plugin, used across many repos (per-repo `specs/lite/`). ← assumed
+- (b) speclite scaffolds/manages multiple separate repos from one place.
+- (c) A marketplace hosting several of your plugins.
+
+> **Question:** which of (a)/(b)/(c)? Changes whether config is per-repo or global.
+
+> ANSWER: a
+
+### E4. Repo / org name + homepage URL
+Formula and marketplace need the canonical URL. `bin/speclite` and `speclite.rb` use
+`github.com/nhadzariga/speclite` as a placeholder — confirm.
+
+> ANSWER: deferred, but will be github.com/elnaterator/speclite
+
+---
+
+## F. Misc
+
+### F1. specs/lite/ path — fixed or configurable?
+- **(rec)** Fixed `specs/lite/` for v1. Configurable later via `.speclite.json`.
+
+> ANSWER: use recommendation
+
+### F2. Trunk branch detection
+design.md lists main/master/develop.
+- **(rec)** Detect via `git symbolic-ref refs/remotes/origin/HEAD`; fall back to the list.
+
+> ANSWER: use recommendation
+
+### F3. Naming — keep "speclite"?
+Confirm final name (affects everything). Assumed yes.
+
+> ANSWER: yes
