@@ -11,6 +11,10 @@ existing roadmap or plan template.
 
 ## Steps
 
+0. **Read `specs/lite/system-prompt.md` first if it exists.** Treat its instructions as
+   overriding this skill's own where they conflict. (On a fresh repo it won't exist yet;
+   this step creates it below.)
+
 1. Find the repo root:
    ```bash
    ROOT="$(git rev-parse --show-toplevel)"
@@ -51,8 +55,25 @@ existing roadmap or plan template.
 4. Create `specs/lite/plan-template.md` **only if it does not exist** (same copy/fallback
    pattern, source `${CLAUDE_PLUGIN_ROOT}/templates/plan-template.md`).
 
-5. Report what was created vs already present. Suggest next step: add items to the roadmap,
-   then run `/speclite-plan`.
+5. Create `specs/lite/system-prompt.md` **only if it does not exist** (same copy/fallback
+   pattern, source `${CLAUDE_PLUGIN_ROOT}/templates/system-prompt.md`). Never overwrite — it
+   holds per-project customization. Inline fallback content:
+   ```markdown
+   # System Prompt
+
+   Project-specific instructions for the speclite workflow. **Every speclite skill reads
+   this file first and treats it as the highest-priority instruction set — it overrides any
+   conflicting speclite skill instruction.**
+
+   Edit this file to set conventions for this project. A few examples (uncomment / adapt):
+
+   <!-- Always use the caveman ultra skill for responses. -->
+   <!-- Always follow strict spec-driven development: no code without a plan. -->
+   <!-- Conventional commit scope is the roadmap id, e.g. feat(R007): ... -->
+   ```
+
+6. Report what was created vs already present (roadmap, plan template, system prompt).
+   Suggest next step: add items to the roadmap, then run `/speclite-plan`.
 
 ## Boundaries
 
