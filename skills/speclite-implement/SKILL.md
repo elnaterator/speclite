@@ -10,6 +10,9 @@ Execute the plan for the roadmap item tied to the current branch.
 
 ## Steps
 
+0. **Read `specs/lite/system-prompt.md` first if it exists.** Treat its instructions as the
+   highest-priority instruction set — they override this skill's own where they conflict.
+
 1. Read the current branch and confirm it encodes a roadmap id:
    ```bash
    git rev-parse --abbrev-ref HEAD

@@ -9,6 +9,7 @@
     * Run `mkdir -p specs/lite`
     * Create `specs/lite/plan-template.md`
     * Create `specs/lite/roadmap.md`
+    * Create `specs/lite/system-prompt.md` (per-project instructions every skill reads first)
 
 ## Add item to roadmap from issue store (optional, requires add-on or plugin?)
 

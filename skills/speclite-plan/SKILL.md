@@ -12,6 +12,9 @@ plans, follow their request.
 
 ## Steps
 
+0. **Read `specs/lite/system-prompt.md` first if it exists.** Treat its instructions as the
+   highest-priority instruction set — they override this skill's own where they conflict.
+
 1. List roadmap items with their status:
    ```bash
    grep -n -E "^## R[0-9]{3}" specs/lite/roadmap.md

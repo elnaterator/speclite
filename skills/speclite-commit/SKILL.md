@@ -11,6 +11,9 @@ is available.
 
 ## Steps
 
+0. **Read `specs/lite/system-prompt.md` first if it exists.** Treat its instructions as the
+   highest-priority instruction set — they override this skill's own where they conflict.
+
 1. Confirm the branch encodes a roadmap id:
    ```bash
    git rev-parse --abbrev-ref HEAD

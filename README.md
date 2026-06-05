@@ -3,14 +3,13 @@
 Lightweight **spec-driven development** for Claude Code. A roadmap of work items, a short
 plan per item, one git branch per item — without the ceremony of heavier spec frameworks.
 
-Structure modeled after [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman).
-
 ## Concept
 
 ```
 specs/lite/
   roadmap.md            # ordered items, ids R001, R002, … status in title suffix
   plan-template.md      # template for per-item plans
+  system-prompt.md      # per-project instructions every skill reads first (overrides defaults)
   001-<slug>-plan.md    # one plan per item being worked
 ```
 
@@ -29,7 +28,7 @@ Workflow: **init → plan → implement → commit**. Default is 1 roadmap item 
 
 | Skill | Does |
 |-------|------|
-| `speclite-init` | Create `specs/lite/` with roadmap + plan template (idempotent) |
+| `speclite-init` | Create `specs/lite/` with roadmap, plan template + system prompt (idempotent) |
 | `speclite-plan` | Pick the next backlog item, branch, write a plan, mark PLANNED |
 | `speclite-implement` | Implement the branch's plan; mark WIP → DONE |
 | `speclite-commit` | Plan-completeness check, commit, push, open a PR (`gh`/`bkt`) |
@@ -48,7 +47,7 @@ install the plugin from it.
 Point Claude Code at this directory as a marketplace, then install:
 
 ```bash
-claude plugin marketplace add /Users/natehadz/workspace/speclite
+claude plugin marketplace add {path_to_speclite_repo}
 claude plugin install speclite@speclite     # plugin@marketplace
 ```
 
@@ -106,7 +105,7 @@ work: a thin Go CLI, homebrew packaging, an optional review skill, and an issue-
 ```
 .claude-plugin/   plugin.json, marketplace.json
 skills/           one SKILL.md per skill
-templates/        roadmap.md, plan-template.md (source for speclite-init)
+templates/        roadmap.md, plan-template.md, system-prompt.md (source for speclite-init)
 specs/lite/       speclite's own roadmap (dogfooding)
 QUESTIONS.md      design decisions + answers
 ```
