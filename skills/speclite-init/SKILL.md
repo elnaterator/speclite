@@ -72,8 +72,17 @@ existing roadmap or plan template.
    <!-- Conventional commit scope is the roadmap id, e.g. feat(R007): ... -->
    ```
 
-6. Report what was created vs already present (roadmap, plan template, system prompt).
-   Suggest next step: add items to the roadmap, then run `/speclite-plan`.
+6. Git-ignore the autopilot markers so they never get committed. Create
+   `specs/lite/.gitignore` (only if absent) with:
+   ```gitignore
+   .autopilot
+   .autopilot-halt
+   ```
+   These transient files are autopilot's enable flag and halt signal (see `/speclite-auto`,
+   `/speclite-next`). They are per-machine state, not part of the spec.
+
+7. Report what was created vs already present (roadmap, plan template, system prompt, autopilot
+   gitignore). Suggest next step: add items to the roadmap, then run `/speclite-plan`.
 
 ## Boundaries
 

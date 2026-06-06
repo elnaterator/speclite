@@ -58,7 +58,13 @@ is available.
 
    Focus on a clear, concise reason for the changes, and how it was verified, rather than an exhaustive list of changes.
 
-7. Report: commit sha, branch, PR URL.
+7. Clear the autopilot halt marker so the pipeline can resume cleanly on the next item:
+   ```bash
+   rm -f specs/lite/.autopilot-halt
+   ```
+   (Harmless if autopilot is off or the marker is absent.)
+
+8. Report: commit sha, branch, PR URL.
 
 ## Boundaries
 
