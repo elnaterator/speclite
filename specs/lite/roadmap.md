@@ -34,26 +34,29 @@ re-triggers `speclite-next` while an autopilot flag is enabled, until the roadma
 bash + markdown only. Must respect existing pause gates and STOP before commit/PR
 (irreversible, outward-facing).
 
-## R007 thin CLI in Go
+## R007 Add cursor plugin scaffolding - DONE
+Should have needed manifests, adjustments to work as a cursor plugin. Research https://cursor.com/docs/plugins#creating-plugins, and https://github.com/cursor/plugin-template, base your updates on docs and latest instructions.
+
+## R008 thin CLI in Go
 Single static binary `speclite`. v1 commands: `init` (mkdir + write templates). Backs
 deterministic file/config work; skills keep the git/grep/sed orchestration. Sets up
 homebrew packaging path. Lang: Go (no runtime dep, easy bottle).
 
-## R008 homebrew packaging
+## R009 homebrew packaging
 Personal tap `nhadzariga/tap` (confirm org) with a formula building the Go binary.
 Depends on R007.
 
-## R009 review skill (maybe)
+## R010 review skill (maybe)
 Optional review step between implement and commit. Likely delegates to `/code-review`
 scoped to the branch diff. May be skipped — decide later.
 
-## R010 roadmap/issues skill — GitHub Issues
+## R011 roadmap/issues skill — GitHub Issues
 `speclite-roadmap`: append a roadmap item, optionally pulled from GitHub Issues. Reads
 config; credentials via OS keychain or env var (`SPECLITE_GITHUB_TOKEN`), not a flat file.
 
-## R011 issues — Jira support
+## R012 issues — Jira support
 Extend the issue-store add-on to Jira (PAT via keychain/env). No Bitbucket for issues.
 
-## R012 marketplace publish (maybe)
+## R013 marketplace publish (maybe)
 Publish to a Claude Code marketplace repo so users can
 `claude plugin install speclite@elnaterator`. Confirm org/repo. Tentative.
