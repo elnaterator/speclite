@@ -24,7 +24,7 @@ Item lifecycle (status = roadmap title suffix):
 Workflow: **init → plan → implement → commit**. Default is 1 roadmap item = 1 plan =
 1 branch, but the skills stay flexible to your request.
 
-## Skills (v1)
+## Skills
 
 | Skill | Does |
 |-------|------|
@@ -32,9 +32,31 @@ Workflow: **init → plan → implement → commit**. Default is 1 roadmap item 
 | `speclite-plan` | Pick the next backlog item, branch, write a plan, mark PLANNED |
 | `speclite-implement` | Implement the branch's plan; mark WIP → DONE |
 | `speclite-commit` | Plan-completeness check, commit, push, open a PR (`gh`/`bkt`) |
+| `speclite-next` | Dispatcher: read state, run the right next skill (init/plan/implement), halt at gates |
+| `speclite-auto` | Toggle autopilot on/off (the Stop-hook enable flag) |
 
 Branches: `<type>/R<NNN>-<slug>` (type ∈ feat, fix, chore, docs, refactor, perf, test,
 build, ci, style, revert). Trunk is auto-detected via `origin/HEAD`.
+
+## Autopilot (optional)
+
+By default you drive the pipeline one skill at a time. Autopilot chains them for you:
+
+```bash
+/speclite-auto on     # create specs/lite/.autopilot, the enable flag
+/speclite-next        # start: plan → (Stop hook) → implement → halt at pre-commit gate
+/speclite-auto off    # stop the loop
+```
+
+- `speclite-next` is a pure **state-machine dispatcher** over the roadmap status (the single
+  source of truth) plus git state. Each run advances the pipeline by one step or **halts**.
+- A bundled **Stop hook** (`hooks/autopilot-stop.sh`) re-triggers `speclite-next` after each
+  step while the enable flag is present and no halt marker is set.
+- Autopilot **never** commits, pushes, or opens a PR. It halts at the pre-commit gate (item
+  `DONE`); you run `/speclite-commit` yourself. It also halts and asks on any ambiguous or
+  unsafe state (dirty tree, off-trunk, branch without `R<NNN>`, missing item).
+- No infinite loop: every halt writes `specs/lite/.autopilot-halt`, which tells the Stop hook
+  to let the session end. Both markers are git-ignored.
 
 ## Install
 
@@ -105,6 +127,7 @@ work: a thin Go CLI, homebrew packaging, an optional review skill, and an issue-
 ```
 .claude-plugin/   plugin.json, marketplace.json
 skills/           one SKILL.md per skill
+hooks/            hooks.json + autopilot-stop.sh (Stop hook for autopilot)
 templates/        roadmap.md, plan-template.md, system-prompt.md (source for speclite-init)
 specs/lite/       speclite's own roadmap (dogfooding)
 QUESTIONS.md      design decisions + answers

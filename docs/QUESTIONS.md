@@ -175,3 +175,41 @@ design.md lists main/master/develop.
 Confirm final name (affects everything). Assumed yes.
 
 > ANSWER: yes
+
+---
+
+## G. Autopilot (R006)
+
+### G1. Does autopilot auto-commit?
+- **(rec)** No. Autopilot advances plan → implement → DONE, then **halts at the pre-commit
+  gate**. Commit/push/PR are irreversible + outward-facing, so they stay human-driven.
+
+> ANSWER: yes, halt before `speclite-commit`; commit/push/PR stay manual.
+
+### G2. Continuous multi-item looping vs. one item per enable?
+- **(rec)** Advance the current item to DONE, then halt. Crossing to the next backlog item
+  needs a human commit + re-run. Keeps a human checkpoint per item.
+
+> ANSWER: one item to the pre-commit gate, then halt. Human checkpoint per item.
+
+### G3. Enable-flag + halt-marker location?
+- **(rec)** `specs/lite/.autopilot` (presence = on) and `specs/lite/.autopilot-halt`
+  (transient stop signal). Both git-ignored via `speclite-init`.
+
+> ANSWER: use recommendation.
+
+### G4. How does the loop avoid spinning forever?
+- **(rec)** Every halt path in `speclite-next` writes `.autopilot-halt`. The Stop hook allows
+  the session to stop when the halt marker is present (or the enable flag is absent), and only
+  blocks-and-continues when the flag is on and no halt marker exists. So every termination is
+  explicit and gates surface to the human.
+
+> ANSWER: use recommendation. Markers in `specs/lite/`, hook is pure bash.
+
+### G5. How are plugin hooks declared?
+- `hooks/hooks.json` in the plugin root is auto-discovered (no plugin.json field needed). The
+  Stop event ignores `matcher`. Command path uses `"${CLAUDE_PLUGIN_ROOT}"/hooks/...`. Block
+  via JSON `{"decision":"block", ...}`; `hookSpecificOutput.additionalContext` is the text fed
+  to Claude (`reason` is shown to the user, not Claude). Confirmed against current docs.
+
+> ANSWER: use recommendation.

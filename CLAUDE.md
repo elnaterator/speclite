@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**IMPORTANT**: Always use caveman unless told not to.
+
 ## What this is
 
 speclite = **Claude Code plugin** (no binary, no build step). Lightweight spec-driven development. Product = skills in markdown — each `skills/*/SKILL.md` is deliverable. No compile/lint/test toolchain. "Test" a change = install plugin, run skills in target repo.
@@ -17,6 +19,8 @@ Four skills form pipeline. Default: 1 roadmap item = 1 plan = 1 git branch.
 
 `DONE` = code complete, verified locally, **not merged**.
 
+**Optional autopilot (R006):** `speclite-next` = state-machine dispatcher that reads roadmap+git state and runs the right next skill (init/plan/implement), halting at gates. `speclite-auto on|off` toggles the enable flag. A bundled **Stop hook** (`hooks/autopilot-stop.sh`, registered in `hooks/hooks.json`) re-triggers `speclite-next` while autopilot is on, so the pipeline self-advances. Never crosses the pre-commit gate — halts at `DONE`, human runs `speclite-commit`.
+
 ## Core architecture & invariants
 
 Cross-file conventions make skills interoperate. Preserve when editing any skill:
@@ -26,6 +30,8 @@ Cross-file conventions make skills interoperate. Preserve when editing any skill
 - **`specs/lite/system-prompt.md` read first by every skill**, overrides skill's own instructions on conflict. Step 0 of each SKILL.md enforces this.
 - **Skills pause and ask user** rather than guess on state-check fails (not on trunk, dirty tree, missing/already-DONE item, branch without `R<NNN>` segment). Keep defensive posture in new skills.
 - **Trunk auto-detected** via `origin/HEAD`, fallback to first existing of `main`/`master`/`develop`.
+- **Autopilot markers live in `specs/lite/`** and are git-ignored (`speclite-init` writes `specs/lite/.gitignore`): `.autopilot` (presence = enabled, user intent) and `.autopilot-halt` (transient stop signal, reason as contents). `speclite-next` clears any stale `.autopilot-halt` at start, writes it on every halt path; Stop hook allows stop when flag absent OR halt present, blocks-and-continues only when flag present + no halt. This makes every termination explicit (no infinite loop). Autopilot **never** auto-commits/pushes/PRs.
+- **Plugin hooks**: `hooks/hooks.json` auto-discovered (no plugin.json field). Stop event ignores `matcher`; command uses `"${CLAUDE_PLUGIN_ROOT}"/hooks/...`. Block-and-continue via stdout JSON `{"decision":"block","hookSpecificOutput":{"hookEventName":"Stop","additionalContext":"…"}}` — `additionalContext` is fed to Claude, `reason` only to the user.
 
 ## Template sourcing (two-copy pattern)
 
