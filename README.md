@@ -1,7 +1,8 @@
 # speclite
 
-Lightweight **spec-driven development** for Claude Code. A roadmap of work items, a short
-plan per item, one git branch per item — without the ceremony of heavier spec frameworks.
+Lightweight **spec-driven development** for Claude Code and Cursor. A roadmap of work
+items, a short plan per item, one git branch per item — without the ceremony of heavier
+spec frameworks.
 
 ## Concept
 
@@ -60,11 +61,16 @@ By default you drive the pipeline one skill at a time. Autopilot chains them for
 
 ## Install
 
-v1 ships as a Claude Code plugin (no binary). It is distributed as its own marketplace
-(the repo root is the marketplace), so install is two steps: register the marketplace, then
-install the plugin from it.
+v1 ships as a plugin (no binary) for **Claude Code** and **Cursor**. Skills, hooks, and
+templates are shared; each platform has its own manifest at repo root (`.claude-plugin/` vs
+`.cursor-plugin/`).
 
-### Local / dev install (reference this checkout)
+### Claude Code
+
+Claude Code distributes plugins via marketplaces. This repo is its own marketplace, so install
+is two steps: register the marketplace, then install the plugin from it.
+
+#### Local / dev install (reference this checkout)
 
 Point Claude Code at this directory as a marketplace, then install:
 
@@ -97,24 +103,44 @@ claude plugin details speclite
 For pure skill iteration without the plugin wrapper, you can instead symlink the skill dirs
 into `~/.claude/skills/` — they load directly, no marketplace needed.
 
-### Install from GitHub (once published)
+#### Install from GitHub (once published)
 
 ```bash
 claude plugin marketplace add elnaterator/speclite   # owner/repo
 claude plugin install speclite@speclite
 ```
 
-### Use
-
-In any repo, run `/speclite-init` to scaffold `specs/lite/`, add roadmap items, then
-`/speclite-plan` → `/speclite-implement` → `/speclite-commit`.
-
-### Uninstall
+#### Uninstall
 
 ```bash
 claude plugin uninstall speclite
 claude plugin marketplace remove speclite
 ```
+
+### Cursor
+
+Cursor loads local plugins from `~/.cursor/plugins/local/`. Symlink this repo for live
+edits (unlike Claude Code's cache-copy model):
+
+```bash
+ln -sf "$(pwd)" ~/.cursor/plugins/local/speclite
+```
+
+Then **Developer: Reload Window** in Cursor. Verify in **Settings → Rules** that speclite
+skills appear (Agent Decides section). In any repo, run `/speclite-init` to scaffold
+`specs/lite/`, add roadmap items, then `/speclite-plan` → `/speclite-implement` →
+`/speclite-commit`.
+
+To remove the local install, delete the symlink:
+
+```bash
+rm ~/.cursor/plugins/local/speclite
+```
+
+### Use
+
+In any repo (Claude Code or Cursor), run `/speclite-init` to scaffold `specs/lite/`, add
+roadmap items, then `/speclite-plan` → `/speclite-implement` → `/speclite-commit`.
 
 ## Roadmap
 
@@ -125,12 +151,13 @@ work: a thin Go CLI, homebrew packaging, an optional review skill, and an issue-
 ## Repo layout
 
 ```
-.claude-plugin/   plugin.json, marketplace.json
-skills/           one SKILL.md per skill
+.claude-plugin/   Claude Code: plugin.json, marketplace.json
+.cursor-plugin/   Cursor: plugin.json
+skills/           one SKILL.md per skill (shared — both platforms discover here)
 hooks/            hooks.json + autopilot-stop.sh (Stop hook for autopilot)
 templates/        roadmap.md, plan-template.md, system-prompt.md (source for speclite-init)
 specs/lite/       speclite's own roadmap (dogfooding)
-QUESTIONS.md      design decisions + answers
+docs/QUESTIONS.md design decisions + answers
 ```
 
 ## License

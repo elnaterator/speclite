@@ -1,0 +1,18 @@
+{
+  "$schema": "https://cursor.com/schemas/cursor-plugin/plugin.json",
+  "name": "speclite",
+  "displayName": "speclite",
+  "version": "0.1.0",
+  "description": "Lightweight spec-driven development for Claude Code. Roadmap + per-item plans + git-branch-per-item workflow. Skills for init, plan, implement, commit, plus an optional autopilot (next dispatcher + Stop hook).",
+  "author": {
+    "name": "Nathan Hadzariga"
+  },
+  "license": "MIT",
+  "keywords": [
+    "spec-driven",
+    "workflow",
+    "roadmap",
+    "planning",
+    "git"
+  ]
+}

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-speclite = **Claude Code plugin** (no binary, no build step). Lightweight spec-driven development. Product = skills in markdown — each `skills/*/SKILL.md` is deliverable. No compile/lint/test toolchain. "Test" a change = install plugin, run skills in target repo.
+speclite = **dual-platform plugin** (Claude Code + Cursor; no binary, no build step). Lightweight spec-driven development. Product = skills in markdown — each `skills/*/SKILL.md` is deliverable. No compile/lint/test toolchain. "Test" a change = install plugin, run skills in target repo. Manifests: `.claude-plugin/plugin.json` (Claude) and `.cursor-plugin/plugin.json` (Cursor); skills/hooks/templates shared.
 
 ## The workflow it implements
 
@@ -43,7 +43,7 @@ Two consequences when editing templates:
 
 ## Editing & testing the plugin
 
-Claude Code copies plugin into cache on install — no symlink, so source edits not picked up live. Test in-progress changes:
+**Claude Code:** copies plugin into cache on install — no symlink, so source edits not picked up live. Test in-progress changes:
 
 ```bash
 claude plugin marketplace update speclite   # re-read this directory
@@ -53,7 +53,9 @@ claude plugin install speclite@speclite     # reinstall picks up edits; restart 
 
 `claude plugin update` only re-syncs when `version` in `.claude-plugin/plugin.json` bumped, so uninstall+reinstall loop = reliable dev path. For pure skill iteration, symlink skill dirs into `~/.claude/skills/` to load directly without plugin wrapper.
 
-Repo is own marketplace (root = marketplace, see `.claude-plugin/marketplace.json`); plugin manifest = `.claude-plugin/plugin.json`.
+**Cursor:** symlink repo to `~/.cursor/plugins/local/speclite` for live edits; Developer: Reload Window after changes. No marketplace.json needed (single-plugin repo).
+
+Repo layout: `.claude-plugin/` (Claude marketplace + manifest), `.cursor-plugin/` (Cursor manifest), shared `skills/`, `hooks/`, `templates/`.
 
 ## Conventions in this repo
 
