@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-speclite = **dual-platform plugin** (Claude Code + Cursor; no binary, no build step). Lightweight spec-driven development. Product = skills in markdown — each `skills/*/SKILL.md` is deliverable. No compile/lint/test toolchain. "Test" a change = install plugin, run skills in target repo. Manifests: `.claude-plugin/plugin.json` (Claude) and `.cursor-plugin/plugin.json` (Cursor); skills/hooks/templates shared.
+speclite = **tri-platform plugin** (Claude Code + GitHub Copilot [CLI + VS Code] + Cursor; no binary, no build step). Lightweight spec-driven development. Product = skills in markdown — each `skills/*/SKILL.md` is deliverable. No compile/lint/test toolchain. "Test" a change = install plugin, run skills in target repo. Manifests: `.claude-plugin/plugin.json` + `marketplace.json` (shared Claude-format, also read by Copilot CLI + VS Code) and `.cursor-plugin/plugin.json` (Cursor); skills/hooks/templates shared. One cross-platform installer: `bin/install.js` (pure Node, zero deps).
 
 ## The workflow it implements
 
@@ -43,6 +43,10 @@ Two consequences when editing templates:
 
 ## Editing & testing the plugin
 
+**One installer:** `bin/install.js` (pure Node stdlib, zero deps) drives every target via a `TARGETS` registry (`claude` / `copilot` / `cursor`). Flags: `--only <id>` (repeatable), `--all`, `--source <owner/repo|path|git-url>` (auto-detected: `.git` present → local checkout, else canonical `elnaterator/speclite`), `--dry-run`, `--uninstall`, `--list`. Makefile delegates (`make install-copilot` etc.). npx one-liner: `npx -y github:elnaterator/speclite -- --only copilot`. Add a new agent = append one `TARGETS` entry; `main()` unchanged.
+
+**GitHub Copilot (CLI + VS Code):** one `copilot` target. `copilot plugin marketplace add <src>` + `copilot plugin install speclite@speclite` lands in the **shared** `~/.copilot/installed-plugins/<marketplace>/<plugin>/` location, which VS Code Copilot auto-discovers — one install, two surfaces. VS Code additionally needs `chat.plugins.enabled: true` (installer merges it into user `settings.json`, JSONC-tolerant, preserves other keys). Verified (copilot CLI 1.0.47): the existing `.claude-plugin/marketplace.json` is accepted **verbatim** — no `.github/` manifest, no Copilot-format fork. Fallback when no `copilot` CLI but VS Code present: copy + register `chat.pluginLocations`. Stop hook works because speclite stays Claude-format; VS Code ignores hook matchers.
+
 **Claude Code:** copies plugin into cache on install — no symlink, so source edits not picked up live. Test in-progress changes:
 
 ```bash
@@ -53,9 +57,9 @@ claude plugin install speclite@speclite     # reinstall picks up edits; restart 
 
 `claude plugin update` only re-syncs when `version` in `.claude-plugin/plugin.json` bumped, so uninstall+reinstall loop = reliable dev path. For pure skill iteration, symlink skill dirs into `~/.claude/skills/` to load directly without plugin wrapper.
 
-**Cursor:** symlink repo to `~/.cursor/plugins/local/speclite` for live edits; Developer: Reload Window after changes. No marketplace.json needed (single-plugin repo).
+**Cursor:** symlink repo to `~/.cursor/plugins/local/speclite` for live edits; Developer: Reload Window after changes. No marketplace.json needed (single-plugin repo). (`node bin/install.js --only cursor` does a one-shot copy.)
 
-Repo layout: `.claude-plugin/` (Claude marketplace + manifest), `.cursor-plugin/` (Cursor manifest), shared `skills/`, `hooks/`, `templates/`.
+Repo layout: `.claude-plugin/` (shared Claude-format manifest + marketplace, read by Claude/Copilot/VS Code), `.cursor-plugin/` (Cursor manifest), `bin/install.js` + `package.json` (installer + npx), shared `skills/`, `hooks/`, `templates/`.
 
 ## Conventions in this repo
 

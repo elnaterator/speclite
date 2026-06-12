@@ -1,8 +1,8 @@
 # speclite
 
 **Spec-driven development without the ceremony.** A roadmap of work items, a short plan per
-item, one git branch per item — driven by a handful of slash-command skills in Claude Code and
-Cursor. No binary, no build step, no config sprawl. Just markdown and git.
+item, one git branch per item — driven by a handful of slash-command skills. No binary, no build step, no config sprawl. Just
+markdown and git.
 
 You write a one-line roadmap item; speclite plans it, branches it, implements it, and opens the
 PR — pausing at every gate where a human should look.
@@ -37,38 +37,20 @@ suffix** (the single source of truth):
 
 ## Install
 
-speclite ships as a plugin for **Claude Code** and **Cursor**. Skills, hooks, and templates
-are shared; each platform has its own manifest at the repo root.
-
-### Claude Code
-
-This repo is its own plugin marketplace. Register it, then install:
+speclite is a single plugin for **Claude Code**, **GitHub Copilot** (CLI + VS Code), and
+**Cursor**. One cross-platform installer ([`bin/install.js`](./bin/install.js), pure Node, zero
+deps) handles every target — no clone needed:
 
 ```bash
-claude plugin marketplace add elnaterator/speclite   # owner/repo
-claude plugin install speclite@speclite              # plugin@marketplace
+# install for every agent detected on your machine:
+npx -y github:elnaterator/speclite -- --all
+
+# or a single agent (claude | copilot | cursor):
+npx -y github:elnaterator/speclite -- --only copilot
 ```
 
-Verify and restart Claude Code:
-
-```bash
-claude plugin list      # speclite@speclite → enabled
-```
-
-### Cursor
-
-Clone the repo and run the install script — it copies the plugin into
-`~/.cursor/plugins/local/`:
-
-```bash
-git clone https://github.com/elnaterator/speclite.git
-cd speclite
-./scripts/install-cursor.sh                  # macOS/Linux (or: make install-cursor)
-# Windows (PowerShell):  ./scripts/install-cursor.ps1
-```
-
-Then run **Developer: Reload Window**. Confirm in **Settings → Rules** that the speclite
-skills appear (Agent Decides section).
+See [docs/INSTALL.md](./docs/INSTALL.md) for per-agent setup, the Makefile flow, preview flags,
+and the compatibility matrix.
 
 ## Usage
 
