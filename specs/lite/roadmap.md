@@ -39,3 +39,9 @@ Should have needed manifests, adjustments to work as a cursor plugin. Research h
 
 ## R008 Make easy to install with good instructions - DONE
 I want to ensure the all claude or cursor users who find my repo can easy get this plugin installed and up and running. Readme should focus on the user quickly getting up and running, packaging and manifests should be updated properly, focused on any user, it should be ready for distrubution.  Readme should clearly and concisely catch attention, explain capabilities, then give install instructions, then usage instructions. After that can come deeper dives. Also add separate contributing.md focused on developers contributing. Readme is focused on user.
+
+## R009 Add github copilot / vscode scaffolding - DONE
+Should have needed plugin manifests, instructions and scripts to support easy install in vscode for github copilot. Research what is needed for github copilot plugins, compatibility of all features, and bring up any conflicts or issues such as hooks and skills compatibility, etc.
+
+## R010 Support semi-auto and full-auto mode
+Instead of speclite-auto on/off, I want to set speclite-mode default/semi-auto/full-auto. Semi auto should be the equivalent of .autopilot functionality today: plan + implement, halt before commit. Full auto should plan, implement, commit including raising PR automatically, halt after PR. Warn the user of risks when setting full auto. Use a `.mode` file, content will be default, semi-auto, full-auto.

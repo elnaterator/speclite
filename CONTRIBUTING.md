@@ -1,16 +1,18 @@
 # Contributing to speclite
 
-speclite is a **dual-platform plugin** (Claude Code + Cursor) with no binary and no build
-step. The product is the skills themselves — each `skills/*/SKILL.md` is a deliverable.
-There is no compile/lint/test toolchain; "testing" a change means installing the plugin and
-running the skills against a target repo.
+speclite is a **tri-platform plugin** (Claude Code + GitHub Copilot + Cursor) with no binary
+and no build step. The product is the skills themselves — each `skills/*/SKILL.md` is a
+deliverable. There is no compile/lint/test toolchain; "testing" a change means installing the
+plugin and running the skills against a target repo.
 
 ## Repo layout
 
 ```
-.claude-plugin/   Claude Code: plugin.json, marketplace.json
+.claude-plugin/   Claude Code + Copilot CLI + VS Code: plugin.json, marketplace.json (shared Claude-format)
 .cursor-plugin/   Cursor: plugin.json
-skills/           one SKILL.md per skill (shared — both platforms discover here)
+bin/install.js    cross-platform installer (pure Node, zero deps; target registry)
+package.json      minimal; "bin" entry enables the npx one-liner
+skills/           one SKILL.md per skill (shared — all platforms discover here)
 hooks/            hooks.json + autopilot-stop.sh (Stop hook for autopilot)
 templates/        roadmap.md, plan-template.md, system-prompt.md (source for speclite-init)
 specs/lite/       speclite's own roadmap (dogfooding)
@@ -18,6 +20,22 @@ docs/             QUESTIONS.md (design decisions + rationale), design.md (prompt
 ```
 
 ## Dev install & iteration
+
+All installs go through one cross-platform script, `bin/install.js` (pure Node stdlib, zero
+deps). Run it from your checkout — the same command end users run, just with the source
+auto-detected to your local working tree (a `.git` dir means "install from here"):
+
+```bash
+node bin/install.js --only copilot     # or: make install-copilot
+node bin/install.js --only claude      # source auto-detects the local checkout
+node bin/install.js --only cursor
+node bin/install.js --all --dry-run    # preview every detected target
+node bin/install.js --source .         # be explicit about the local source
+node bin/install.js --list             # show targets + detection status
+```
+
+Add a new agent target = append one descriptor `{ id, label, detect, install, uninstall }` to
+the `TARGETS` table in `bin/install.js` plus its functions; `main()` never changes.
 
 ### Claude Code
 
@@ -29,6 +47,7 @@ the cache:
 claude plugin marketplace update speclite   # re-read this directory
 claude plugin uninstall speclite
 claude plugin install speclite@speclite     # reinstall picks up the edits
+# (or just: node bin/install.js --only claude)
 ```
 
 Then restart Claude Code to load the refreshed skills.
@@ -39,6 +58,14 @@ Then restart Claude Code to load the refreshed skills.
 For pure skill iteration without the plugin wrapper, symlink the skill dirs into
 `~/.claude/skills/` — they load directly, no marketplace needed.
 
+### GitHub Copilot (CLI + VS Code)
+
+The `copilot` CLI **copies** the plugin into `~/.copilot/installed-plugins/` (same shared
+location VS Code Copilot auto-discovers), so source edits are **not** live — re-run
+`node bin/install.js --only copilot` after changes. The installer also sets
+`chat.plugins.enabled: true` in VS Code user settings; Reload Window to pick up skill changes.
+Verify with `copilot plugin list` (CLI) and **Chat → Configure Skills** (VS Code).
+
 ### Cursor
 
 Cursor loads local plugins from `~/.cursor/plugins/local/` and **does** follow symlinks, so
@@ -48,8 +75,8 @@ edits are live:
 ln -sf "$(pwd)" ~/.cursor/plugins/local/speclite
 ```
 
-Run **Developer: Reload Window** after changes. No `marketplace.json` is needed (single-plugin
-repo).
+(`node bin/install.js --only cursor` instead does a one-shot copy.) Run **Developer: Reload
+Window** after changes. No `marketplace.json` is needed (single-plugin repo).
 
 ## Editing templates (two-copy pattern)
 
