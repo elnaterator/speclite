@@ -29,8 +29,8 @@ Should have a markdown file next to roadmap.md and plan-template.md, it is alway
 ## R006 autopilot — speclite-next dispatcher + auto-loop hook - DONE
 `speclite-next` skill = state-machine dispatcher: read roadmap status (single source of
 truth), pick next step (init/plan/implement/commit), invoke that skill. A Stop hook (bash)
-re-triggers `speclite-next` while an autopilot flag is enabled, until the roadmap is all
-`DONE` or a pause-gate is hit. Toggle via flag file (`/speclite-auto on|off`). No binary —
+re-triggers `speclite-next` while a loop mode is set, until the roadmap is all
+`DONE` or a pause-gate is hit. Mode set via `.mode` file (`/speclite-mode default|semi-auto|full-auto`). No binary —
 bash + markdown only. Must respect existing pause gates and STOP before commit/PR
 (irreversible, outward-facing).
 
@@ -43,5 +43,5 @@ I want to ensure the all claude or cursor users who find my repo can easy get th
 ## R009 Add github copilot / vscode scaffolding - DONE
 Should have needed plugin manifests, instructions and scripts to support easy install in vscode for github copilot. Research what is needed for github copilot plugins, compatibility of all features, and bring up any conflicts or issues such as hooks and skills compatibility, etc.
 
-## R010 Support semi-auto and full-auto mode
+## R010 Support semi-auto and full-auto mode - DONE
 Instead of speclite-auto on/off, I want to set speclite-mode default/semi-auto/full-auto. Semi auto should be the equivalent of .autopilot functionality today: plan + implement, halt before commit. Full auto should plan, implement, commit including raising PR automatically, halt after PR. Warn the user of risks when setting full auto. Use a `.mode` file, content will be default, semi-auto, full-auto.
