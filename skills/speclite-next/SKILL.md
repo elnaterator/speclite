@@ -61,8 +61,8 @@ at a deliberate gate.
    | `specs/lite/` missing | run **speclite-init**, then **halt** (`fresh scaffold — seed the roadmap, then re-run`) |
    | On trunk, a backlog item exists, tree clean | run **speclite-plan** |
    | On `<type>/R<NNN>-…` branch, item `PLANNED` or `WIP` | run **speclite-implement** |
-   | On branch, item `DONE`, mode `default`/`semi-auto` | **halt** (`pre-commit gate — run /speclite-commit to ship R<NNN>`) |
-   | On branch, item `DONE`, mode `full-auto` | run **speclite-commit**, then **halt** (`post-PR gate — R<NNN> shipped`) |
+   | On branch, item `DONE`, mode `default`/`semi-auto` | run **speclite-review** (conditional); if it halts, stop there; otherwise **halt** (`pre-commit gate — run /speclite-commit to ship R<NNN>`) |
+   | On branch, item `DONE`, mode `full-auto` | run **speclite-review** (conditional); if it halts, stop there; otherwise run **speclite-commit**, then **halt** (`post-PR gate — R<NNN> shipped`) |
    | Roadmap all `DONE` / no backlog item | **halt** (`nothing to do — roadmap fully addressed`) |
    | Dirty tree (unrelated changes) | **halt + ask** (`dirty working tree — resolve before continuing`) |
    | Expected trunk but not on it, or branch lacks `R<NNN>` | **halt + ask** (`ambiguous branch state`) |
@@ -72,16 +72,24 @@ at a deliberate gate.
    - Self-advance rows: invoke the named skill (`/speclite-init`, `/speclite-plan`,
      `/speclite-implement`) and let it run to completion. Do **not** write a halt marker — when
      it finishes, the Stop hook will re-trigger this skill to take the next step.
-   - `full-auto` + `DONE` row: invoke `/speclite-commit`, let it commit/push/open the PR,
-     **then** write the halt marker (`post-PR gate — R<NNN> shipped`). This is the only row
-     that both dispatches a skill and halts in the same run — full-auto stops after the PR.
+   - `DONE` rows always run `/speclite-review` **first**, inline in this same run (not as a
+     separate dispatcher cycle — review is report-only on PASS, so a separate cycle would just
+     re-dispatch it forever). `/speclite-review` applies its own need-review gate (it may skip
+     trivial diffs) and its own mode-specific failed-review handling. If review writes
+     `.autopilot-halt` (it FAILED, or in full-auto its auto-fix loop did not converge), **stop
+     there** — do not proceed to the gate/commit. If review passes or skips, continue:
+     - `default`/`semi-auto` → write the halt marker (`pre-commit gate — run /speclite-commit
+       to ship R<NNN>`); the human runs `/speclite-commit`.
+     - `full-auto` → invoke `/speclite-commit`, let it commit/push/open the PR, **then** write
+       the halt marker (`post-PR gate — R<NNN> shipped`).
    - Halt rows: the marker is written; report the reason to the user. If the row says
      **+ ask**, pause and ask the user how to proceed (never guess on ambiguous/unsafe state).
 
-5. **Commit gate is mode-gated.** Reaching `DONE` is the commit gate. In `default`/`semi-auto`
-   autopilot stops here and the human runs `/speclite-commit` — this skill must not commit,
-   push, or open a PR. Only in `full-auto` does this skill cross the gate by dispatching
-   `/speclite-commit`, and it always halts immediately after the PR is opened (never merges).
+5. **Commit gate is mode-gated.** Reaching `DONE` is the commit gate, and `/speclite-review`
+   runs just before it. In `default`/`semi-auto` autopilot stops at the gate and the human runs
+   `/speclite-commit` — this skill must not commit, push, or open a PR. Only in `full-auto` does
+   this skill cross the gate by dispatching `/speclite-commit`, and only after review passes; it
+   always halts immediately after the PR is opened (never merges).
 
 ## Autopilot loop
 

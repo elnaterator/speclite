@@ -3,7 +3,7 @@
   "name": "speclite",
   "displayName": "speclite",
   "version": "0.2.0",
-  "description": "Lightweight spec-driven development for Claude Code, GitHub Copilot (CLI + VS Code), and Cursor. Roadmap + per-item plans + git-branch-per-item workflow. Skills for init, plan, implement, commit, plus an optional autopilot (next dispatcher + Stop hook).",
+  "description": "Lightweight spec-driven development for Claude Code, GitHub Copilot (CLI + VS Code), and Cursor. Roadmap + per-item plans + git-branch-per-item workflow. Skills for init, plan, implement, review, commit, plus an optional autopilot (next dispatcher + Stop hook).",
   "author": {
     "name": "Nathan Hadzariga"
   },

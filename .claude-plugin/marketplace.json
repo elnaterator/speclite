@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "speclite",
-      "description": "Roadmap-driven dev workflow: init, plan, implement, commit, plus optional autopilot. Simple, file-based, git-native. Claude Code + GitHub Copilot + Cursor.",
+      "description": "Roadmap-driven dev workflow: init, plan, implement, review, commit, plus optional autopilot. Simple, file-based, git-native. Claude Code + GitHub Copilot + Cursor.",
       "source": "./",
       "category": "workflow"
     }
