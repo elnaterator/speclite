@@ -19,7 +19,7 @@ Four skills form pipeline. Default: 1 roadmap item = 1 plan = 1 git branch.
 
 `DONE` = code complete, verified locally, **not merged**.
 
-**Optional autopilot (R006):** `speclite-next` = state-machine dispatcher that reads roadmap+git state and runs the right next skill (init/plan/implement), halting at gates. `speclite-auto on|off` toggles the enable flag. A bundled **Stop hook** (`hooks/autopilot-stop.sh`, registered in `hooks/hooks.json`) re-triggers `speclite-next` while autopilot is on, so the pipeline self-advances. Never crosses the pre-commit gate — halts at `DONE`, human runs `speclite-commit`.
+**Optional autopilot (R006, R010):** `speclite-next` = state-machine dispatcher that reads roadmap+git state and runs the right next skill (init/plan/implement), halting at gates. `speclite-mode default|semi-auto|full-auto` sets the mode (`specs/lite/.mode`). A bundled **Stop hook** (`hooks/autopilot-stop.sh`, registered in `hooks/hooks.json`) re-triggers `speclite-next` while the mode is a loop mode, so the pipeline self-advances. **semi-auto** halts at the pre-commit gate (`DONE`, human runs `speclite-commit`); **full-auto** crosses it — `speclite-next` dispatches `speclite-commit` at `DONE` and halts after the PR (never merges). `default` = no autopilot.
 
 ## Core architecture & invariants
 
@@ -30,7 +30,7 @@ Cross-file conventions make skills interoperate. Preserve when editing any skill
 - **`specs/lite/system-prompt.md` read first by every skill**, overrides skill's own instructions on conflict. Step 0 of each SKILL.md enforces this.
 - **Skills pause and ask user** rather than guess on state-check fails (not on trunk, dirty tree, missing/already-DONE item, branch without `R<NNN>` segment). Keep defensive posture in new skills.
 - **Trunk auto-detected** via `origin/HEAD`, fallback to first existing of `main`/`master`/`develop`.
-- **Autopilot markers live in `specs/lite/`** and are git-ignored (`speclite-init` writes `specs/lite/.gitignore`): `.autopilot` (presence = enabled, user intent) and `.autopilot-halt` (transient stop signal, reason as contents). `speclite-next` clears any stale `.autopilot-halt` at start, writes it on every halt path; Stop hook allows stop when flag absent OR halt present, blocks-and-continues only when flag present + no halt. This makes every termination explicit (no infinite loop). Autopilot **never** auto-commits/pushes/PRs.
+- **Autopilot markers live in `specs/lite/`** and are git-ignored (`speclite-init` writes `specs/lite/.gitignore`): `.mode` (contents = `default`/`semi-auto`/`full-auto`, user intent; absent ⇒ `default`) and `.autopilot-halt` (transient stop signal, reason as contents). `speclite-next` clears any stale `.autopilot-halt` at start, writes it on every halt path; Stop hook allows stop when mode is `default`/absent OR halt present, blocks-and-continues only when mode is a loop mode + no halt. This makes every termination explicit (no infinite loop). `default`/`semi-auto` **never** auto-commit/push/PR; **full-auto** deliberately does (commit + push + open PR) but always halts after the PR — never merges.
 - **Plugin hooks**: `hooks/hooks.json` auto-discovered (no plugin.json field). Stop event ignores `matcher`; command uses `"${CLAUDE_PLUGIN_ROOT}"/hooks/...`. Block-and-continue via stdout JSON `{"decision":"block","hookSpecificOutput":{"hookEventName":"Stop","additionalContext":"…"}}` — `additionalContext` is fed to Claude, `reason` only to the user.
 
 ## Template sourcing (two-copy pattern)

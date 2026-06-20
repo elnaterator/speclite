@@ -5,13 +5,13 @@
 # enabled and no halt marker is present. Pure bash, no dependencies.
 #
 # Markers (in the target repo, relative to the session cwd):
-#   specs/lite/.autopilot       present => autopilot enabled (user intent)
-#   specs/lite/.autopilot-halt  present => pipeline reached a gate; allow stop
+#   specs/lite/.mode            contents => default | semi-auto | full-auto (user intent)
+#   specs/lite/.autopilot-halt  present  => pipeline reached a gate; allow stop
 #
 # Decision table:
-#   .autopilot absent                       -> allow stop (autopilot off)
-#   .autopilot present + .autopilot-halt     -> allow stop (gate reached)
-#   .autopilot present + no halt marker      -> block stop, tell Claude to run /speclite-next
+#   .mode default/absent                          -> allow stop (autopilot off)
+#   .mode semi-auto|full-auto + .autopilot-halt    -> allow stop (gate reached)
+#   .mode semi-auto|full-auto + no halt marker     -> block stop, tell Claude to run /speclite-next
 
 set -euo pipefail
 
@@ -22,11 +22,18 @@ cwd="$(printf '%s' "$input" | sed -n 's/.*"cwd"[[:space:]]*:[[:space:]]*"\([^"]*
 [ -z "$cwd" ] && cwd="$PWD"
 
 spec_dir="$cwd/specs/lite"
-flag="$spec_dir/.autopilot"
+mode_file="$spec_dir/.mode"
 halt="$spec_dir/.autopilot-halt"
 
-# Autopilot off -> let the session stop normally.
-if [ ! -f "$flag" ]; then
+# Read the mode (file contents); default when absent/unreadable.
+mode="default"
+if [ -f "$mode_file" ]; then
+  mode="$(tr -d '[:space:]' < "$mode_file" 2>/dev/null || true)"
+  [ -z "$mode" ] && mode="default"
+fi
+
+# Autopilot off (default) -> let the session stop normally.
+if [ "$mode" = "default" ]; then
   exit 0
 fi
 
@@ -44,7 +51,7 @@ cat <<'JSON'
   "reason": "autopilot on — continuing the speclite pipeline",
   "hookSpecificOutput": {
     "hookEventName": "Stop",
-    "additionalContext": "Autopilot is enabled (specs/lite/.autopilot present) and no halt marker is set. Run the /speclite-next skill now to advance the speclite pipeline."
+    "additionalContext": "Autopilot is enabled (specs/lite/.mode is semi-auto or full-auto) and no halt marker is set. Run the /speclite-next skill now to advance the speclite pipeline."
   }
 }
 JSON

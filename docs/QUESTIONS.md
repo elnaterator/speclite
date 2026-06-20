@@ -213,3 +213,26 @@ Confirm final name (affects everything). Assumed yes.
   to Claude (`reason` is shown to the user, not Claude). Confirmed against current docs.
 
 > ANSWER: use recommendation.
+
+## R010 — three-state autopilot mode (semi-auto / full-auto)
+
+### M1. Binary enable flag vs. three-state mode?
+- **(rec)** Replace the presence-based `.autopilot` flag and `/speclite-auto on|off` with a
+  single `specs/lite/.mode` file whose contents are `default` | `semi-auto` | `full-auto`,
+  set via `/speclite-mode <mode>`. `default`/absent = off; `semi-auto` = today's loop (halt
+  before commit); `full-auto` = loop that also auto commits + pushes + opens a PR, then halts
+  after the PR. One source of truth, room to grow, clearer intent than a bare flag.
+
+> ANSWER: use recommendation. Skill renamed `speclite-auto` → `speclite-mode`; no back-compat
+> alias (roadmap text says "Instead of speclite-auto on/off"). Halt marker keeps the name
+> `.autopilot-halt` to minimize churn. `speclite-init` does not seed `.mode` — absent ⇒
+> `default`; it only adds `.mode` to the git-ignore list.
+
+### M2. Does full-auto cross the pre-commit gate? Where does the commit happen?
+- **(rec)** The Stop hook stays a dumb "loop on/off" check (mode ≠ default ⇒ block + run
+  `/speclite-next`). The gate decision lives in `speclite-next`: on a branch with item `DONE`,
+  `semi-auto` halts (pre-commit gate); `full-auto` dispatches `/speclite-commit`, then halts
+  after the PR. full-auto never merges. This revises the earlier "autopilot never
+  auto-commits/pushes/PRs" invariant — it now applies only to `default`/`semi-auto`.
+
+> ANSWER: use recommendation. Setting `full-auto` must warn the user of the auto-push/PR risk.

@@ -109,8 +109,10 @@ Cross-file conventions make the skills interoperate. Preserve these when editing
 - **Skills pause and ask** rather than guess on state-check fails (not on trunk, dirty tree,
   missing/already-DONE item, branch without an `R<NNN>` segment).
 - **Trunk auto-detected** via `origin/HEAD`, fallback to first existing of `main`/`master`/`develop`.
-- **Autopilot markers** live in `specs/lite/` and are git-ignored: `.autopilot` (presence =
-  enabled) and `.autopilot-halt` (transient stop signal). Autopilot **never** auto-commits.
+- **Autopilot markers** live in `specs/lite/` and are git-ignored: `.mode` (contents =
+  `default`/`semi-auto`/`full-auto`, set via `/speclite-mode`) and `.autopilot-halt`
+  (transient stop signal). `default`/`semi-auto` **never** auto-commit; `full-auto` auto
+  commits + pushes + opens a PR, then halts after the PR (never merges).
 
 See `docs/QUESTIONS.md` for design decisions + rationale and `docs/design.md` for the original
 prompt-flow sketch — consult these before reworking workflow semantics.

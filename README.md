@@ -23,7 +23,7 @@ PR — pausing at every gate where a human should look.
 | `speclite-implement` | Implement the branch's plan; mark WIP → DONE |
 | `speclite-commit` | Plan-completeness check, commit, push, open a PR |
 | `speclite-next` | Dispatcher: read state, run the right next skill, halt at gates |
-| `speclite-auto` | Toggle autopilot on/off |
+| `speclite-mode` | Set autopilot mode: default / semi-auto / full-auto |
 
 Each work item moves through a simple lifecycle, with **status stored as the roadmap heading
 suffix** (the single source of truth):
@@ -68,21 +68,26 @@ Not sure what's next? `/speclite-next` reads the roadmap + git state and runs th
 
 ## Autopilot (optional)
 
-By default you drive the pipeline one skill at a time. Autopilot chains them for you:
+By default you drive the pipeline one skill at a time. Autopilot chains them for you. Pick a
+mode with `/speclite-mode` (stored in `specs/lite/.mode`):
 
 ```bash
-/speclite-auto on     # create specs/lite/.autopilot, the enable flag
-/speclite-next        # plan → (Stop hook) → implement → halt at the pre-commit gate
-/speclite-auto off    # stop the loop
+/speclite-mode semi-auto   # loop, but halt before commit (you run /speclite-commit)
+/speclite-mode full-auto   # loop AND auto commit + push + open PR, halt after the PR
+/speclite-mode default     # off — drive the pipeline manually
+/speclite-next             # plan → (Stop hook) → implement → halt at the gate for your mode
 ```
 
 - `speclite-next` is a pure **state-machine dispatcher** over the roadmap status plus git
   state. Each run advances the pipeline by one step or **halts**.
 - A bundled **Stop hook** (`hooks/autopilot-stop.sh`) re-triggers `speclite-next` after each
-  step while the enable flag is present and no halt marker is set.
-- Autopilot **never** commits, pushes, or opens a PR. It halts at the pre-commit gate (item
-  `DONE`); you run `/speclite-commit` yourself. It also halts and asks on any ambiguous or
-  unsafe state (dirty tree, off-trunk, branch without `R<NNN>`, missing item).
+  step while the mode is `semi-auto`/`full-auto` and no halt marker is set.
+- **semi-auto** never commits, pushes, or opens a PR — it halts at the pre-commit gate (item
+  `DONE`); you run `/speclite-commit`. **full-auto** crosses that gate: `speclite-next`
+  dispatches `/speclite-commit` at `DONE` and halts after the PR is opened (it never merges).
+  Setting full-auto warns you of that risk first.
+- Either mode halts and asks on any ambiguous or unsafe state (dirty tree, off-trunk, branch
+  without `R<NNN>`, missing item).
 - No infinite loop: every halt writes `specs/lite/.autopilot-halt`, which tells the Stop hook
   to let the session end. Both markers are git-ignored.
 

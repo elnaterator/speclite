@@ -75,10 +75,10 @@ existing roadmap or plan template.
 6. Git-ignore the autopilot markers so they never get committed. Create
    `specs/lite/.gitignore` (only if absent) with:
    ```gitignore
-   .autopilot
+   .mode
    .autopilot-halt
    ```
-   These transient files are autopilot's enable flag and halt signal (see `/speclite-auto`,
+   These transient files are autopilot's mode selector and halt signal (see `/speclite-mode`,
    `/speclite-next`). They are per-machine state, not part of the spec.
 
 7. Report what was created vs already present (roadmap, plan template, system prompt, autopilot
