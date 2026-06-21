@@ -21,9 +21,11 @@ PR — pausing at every gate where a human should look.
 | `speclite-init` | Create `specs/lite/` with roadmap, plan template + system prompt (idempotent) |
 | `speclite-plan` | Pick the next backlog item, branch, write a plan, mark PLANNED |
 | `speclite-implement` | Implement the branch's plan; mark WIP → DONE |
+| `speclite-review` | Review the branch diff vs the plan's acceptance criteria; flag drift |
 | `speclite-commit` | Plan-completeness check, commit, push, open a PR |
 | `speclite-next` | Dispatcher: read state, run the right next skill, halt at gates |
 | `speclite-mode` | Set autopilot mode: default / semi-auto / full-auto |
+| `speclite-status` | Read-only: print pipeline state + a dry-run of what `next` would do |
 
 Each work item moves through a simple lifecycle, with **status stored as the roadmap heading
 suffix** (the single source of truth):
