@@ -10,16 +10,17 @@ speclite = **tri-platform plugin** (Claude Code + GitHub Copilot [CLI + VS Code]
 
 ## The workflow it implements
 
-Four skills form pipeline. Default: 1 roadmap item = 1 plan = 1 git branch.
+Core skills form pipeline. Default: 1 roadmap item = 1 plan = 1 git branch.
 
 - `speclite-init` — scaffold `specs/lite/` (roadmap, plan template, system prompt). Idempotent, never overwrites.
 - `speclite-plan` — pick next backlog item, create branch, write plan, mark `PLANNED`.
 - `speclite-implement` — implement branch's plan, mark `WIP` → `DONE`.
+- `speclite-review` (R011) — review branch diff vs plan acceptance criteria + system prompt, flag drift (missing criteria, scope creep, unverified claims). Runs between `DONE` and commit. Report-only by default; **conditional** (skips trivial diffs) under autopilot; in full-auto auto-fixes failed findings and re-reviews up to a 3-attempt cap, else halts.
 - `speclite-commit` — plan-completeness check, commit, push, open PR.
 
 `DONE` = code complete, verified locally, **not merged**.
 
-**Optional autopilot (R006, R010):** `speclite-next` = state-machine dispatcher that reads roadmap+git state and runs the right next skill (init/plan/implement), halting at gates. `speclite-mode default|semi-auto|full-auto` sets the mode (`specs/lite/.mode`). A bundled **Stop hook** (`hooks/autopilot-stop.sh`, registered in `hooks/hooks.json`) re-triggers `speclite-next` while the mode is a loop mode, so the pipeline self-advances. **semi-auto** halts at the pre-commit gate (`DONE`, human runs `speclite-commit`); **full-auto** crosses it — `speclite-next` dispatches `speclite-commit` at `DONE` and halts after the PR (never merges). `default` = no autopilot.
+**Optional autopilot (R006, R010):** `speclite-next` = state-machine dispatcher that reads roadmap+git state and runs the right next skill (init/plan/implement/review), halting at gates. `speclite-mode default|semi-auto|full-auto` sets the mode (`specs/lite/.mode`). A bundled **Stop hook** (`hooks/autopilot-stop.sh`, registered in `hooks/hooks.json`) re-triggers `speclite-next` while the mode is a loop mode, so the pipeline self-advances. At `DONE`, `speclite-next` runs `speclite-review` inline before the commit gate (review halts the loop on FAIL / non-convergence). **semi-auto** halts at the pre-commit gate (human runs `speclite-commit`); **full-auto** crosses it — after review passes, `speclite-next` dispatches `speclite-commit` and halts after the PR (never merges). `default` = no autopilot.
 
 ## Core architecture & invariants
 
