@@ -53,3 +53,11 @@ When run under autopilot (`speclite-next` dispatch), review is **conditional, no
 
 ## R012 speclite-status skill - DONE
 Add a read-only `speclite-status` skill that prints the current pipeline state at a glance: roadmap items by status (backlog/PLANNED/WIP/DONE), current branch + its roadmap item, autopilot mode (`.mode`) and any active `.autopilot-halt`, open PR (via gh) for the branch, and what `speclite-next` would do next (dry-run of the dispatcher — compute the next step without executing it). No writes, no side effects, safe to run anytime. Reads `system-prompt.md` first per convention. Useful as a daily check and to preview autopilot before committing to a loop mode.
+
+## R013 Improve agent/skill support for the bkt CLI (Bitbucket)
+Some repos live on Bitbucket Data Center, not GitHub, so PR and repo operations use the `bkt` CLI, not `gh`. Make the relevant skills (e.g. `speclite-status`, `speclite-commit`) bkt-aware so they reliably pick and drive the right tool.
+- **Detect when to use bkt vs gh**: prefer `bkt` whenever the remote is Bitbucket (e.g. `git remote -v` shows `bitbucket`) or something in the project docs indicates bitbucket is used, otherwise `gh`. Skills should check the remote rather than assuming GitHub.
+- **Know how to use bkt**: cover the common flows — `bkt pr list --mine`, `bkt pr view <id>`, `bkt pr create`, `bkt pr edit <id> --body`, `bkt pr comment`. Note that `bkt pr edit --body` replaces the whole description, and that `--jq` returns JSON-encoded strings (decode before writing back, or the body gets double-escaped).
+- **Instruct on basic config issues** (keep guidance very short and concise but clear):
+  - `no such host` for DNS or TLS trust wall issues due to running commands in sandbox: add `bkt` to `sandbox.excludedCommands` (claude code) to run it unsandboxed.
+  - Auth: `bkt auth status` to check, `bkt auth login https://code.experian.local` to (re)authenticate.
