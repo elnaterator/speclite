@@ -61,3 +61,15 @@ Some repos live on Bitbucket Data Center, not GitHub, so PR and repo operations 
 - **Instruct on basic config issues** (keep guidance very short and concise but clear):
   - `no such host` for DNS or TLS trust wall issues due to running commands in sandbox: add `bkt` to `sandbox.excludedCommands` (claude code) to run it unsandboxed.
   - Auth: `bkt auth status` to check, `bkt auth login https://code.experian.local` to (re)authenticate.
+
+## R014 usability refactor — clearer names, statuses, vocabulary
+Reduce cognitive load across speclite. No backwards-compat required (early, single-user); all renames are mechanical but must stay consistent across skills, hooks, templates, installer, README/CONTRIBUTING, CLAUDE.md, and the dogfood `specs/lite/`. Scope:
+
+1. **Rename `system-prompt.md` → `rules.md`.** "system-prompt" leaks LLM jargon; "rules" is obvious to a developer. Update every Step-0 read, template, inline fallback in init, and docs. Keep semantics (read first, overrides skill instructions).
+2. **Status vocabulary that doesn't lie.** Replace `DONE` (which actually meant "code complete, NOT merged" and needed repeated caveats) with `BUILT` (code complete, ready to commit) and add `SHIPPED` (commit pushed + PR open). New lifecycle: backlog → `PLANNED` → `WIP` → `BUILT` → `SHIPPED`. `speclite-commit` sets `SHIPPED` after the PR. Roadmap status stays the single source of truth.
+3. **Unify "autopilot" → "mode" vocabulary.** One word for the loop concept. Rename hook `autopilot-stop.sh` → `mode-stop.sh`, marker `.autopilot-halt` → `.halt`, and scrub "autopilot" from docs/comments in favor of "mode". `.mode` file unchanged.
+4. **Identical join key everywhere.** Plan filenames carry the `R` prefix to match the roadmap id: `specs/lite/R<NNN>-<slug>-plan.md` (was `<NNN>-<slug>-plan.md`). Rename existing dogfood plans.
+5. **Rename `speclite-next` → `speclite-run`.** "next" reads read-only (and collides intuitively with the truly read-only `speclite-status`); "run" signals it executes the pipeline. Update the Stop hook command, mode skill references, and docs.
+6. **Rename `speclite-implement` → `speclite-build`.** Shorter, pairs with the new `BUILT` status. Update skill dir, manifests, dispatcher references, docs.
+
+Keep `specs/lite/` as the spec directory (no folder move). Acceptance: fresh `speclite-init` produces `rules.md` + `R`-prefixed plan template wording; full pipeline runs end-to-end with new names; no stale `system-prompt.md` / `DONE` / `autopilot` / `speclite-next` / `speclite-implement` references remain (grep clean); dogfood `specs/lite/` migrated to match.
