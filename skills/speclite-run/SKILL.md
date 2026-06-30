@@ -1,0 +1,110 @@
+---
+name: speclite-run
+description: >
+  State-machine dispatcher for the speclite workflow: inspect roadmap + git state and run the
+  correct next skill (init / plan / build), halting before commit. Use when the user says
+  "speclite run", "what's next", "advance the pipeline", or invokes /speclite-run. Also
+  invoked automatically by the mode Stop hook.
+---
+
+Read the roadmap status (single source of truth) plus git state, then dispatch the correct
+next speclite skill. This skill owns no state — it is a pure reader that decides one action.
+It is the engine of the loop modes: each run either advances the pipeline by one step or
+**halts** at a deliberate gate.
+
+## Steps
+
+0. **Read `specs/lite/rules.md` first if it exists.** Treat its instructions as the
+   highest-priority instruction set — they override this skill's own where they conflict.
+
+1. **Clear any stale halt marker** at the start of the run:
+   ```bash
+   rm -f specs/lite/.halt
+   ```
+   The decision below re-creates it only if this run ends in a halt.
+
+2. **Observe state.**
+   - Spec dir present?
+     ```bash
+     test -d specs/lite && echo present || echo missing
+     ```
+   - Mode (drives how far the loop advances):
+     ```bash
+     cat specs/lite/.mode 2>/dev/null || echo default
+     ```
+     `default` = manual; `semi-auto` = self-advance, halt before commit; `full-auto` =
+     self-advance and also auto commit + PR, halt after PR.
+   - Current branch + trunk:
+     ```bash
+     git rev-parse --abbrev-ref HEAD
+     git symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'
+     ```
+     Fall back to the first of `main`, `master`, `develop` that exists for trunk.
+   - Working tree clean? (uncommitted roadmap/plan edits are OK; unrelated changes are not.)
+     ```bash
+     git status --porcelain
+     ```
+   - Roadmap items + status:
+     ```bash
+     grep -n -E "^## [0-9]{3}" specs/lite/roadmap.md
+     ```
+     Status suffix: _(none)_=backlog, ` - PLANNED`, ` - WIP`, ` - BUILT`, ` - SHIPPED`.
+
+3. **Decide one action** from the table. On any **halt**, write the reason to the marker and
+   stop (do not run another skill):
+   ```bash
+   echo "<reason>" > specs/lite/.halt
+   ```
+
+   | Observed state | Action |
+   |----------------|--------|
+   | `specs/lite/` missing | run **speclite-init**, then **halt** (`fresh scaffold — seed the roadmap, then re-run`) |
+   | On trunk, a backlog item exists, tree clean | run **speclite-plan** |
+   | On `<type>/<NNN>-…` branch, item `PLANNED` or `WIP` | run **speclite-build** |
+   | On branch, item `BUILT`, mode `default`/`semi-auto` | run **speclite-review** (conditional); if it halts, stop there; otherwise **halt** (`pre-commit gate — run /speclite-ship to ship <NNN>`) |
+   | On branch, item `BUILT`, mode `full-auto` | run **speclite-review** (conditional); if it halts, stop there; otherwise run **speclite-ship**, then **halt** (`post-PR gate — <NNN> shipped`) |
+   | Roadmap all `SHIPPED` / no backlog item | **halt** (`nothing to do — roadmap fully addressed`) |
+   | Dirty tree (unrelated changes) | **halt + ask** (`dirty working tree — resolve before continuing`) |
+   | Expected trunk but not on it, or branch lacks `<NNN>` | **halt + ask** (`ambiguous branch state`) |
+   | Missing item for the branch's `<NNN>` | **halt + ask** (`no roadmap item for this branch`) |
+
+4. **Dispatch or halt.**
+   - Self-advance rows: invoke the named skill (`/speclite-init`, `/speclite-plan`,
+     `/speclite-build`) and let it run to completion. Do **not** write a halt marker — when
+     it finishes, the Stop hook will re-trigger this skill to take the next step.
+   - `BUILT` rows always run `/speclite-review` **first**, inline in this same run (not as a
+     separate dispatcher cycle — review is report-only on PASS, so a separate cycle would just
+     re-dispatch it forever). `/speclite-review` applies its own need-review gate (it may skip
+     trivial diffs) and its own mode-specific failed-review handling. If review writes
+     `.halt` (it FAILED, or in full-auto its auto-fix loop did not converge), **stop
+     there** — do not proceed to the gate/commit. If review passes or skips, continue:
+     - `default`/`semi-auto` → write the halt marker (`pre-commit gate — run /speclite-ship
+       to ship <NNN>`); the human runs `/speclite-ship`.
+     - `full-auto` → invoke `/speclite-ship`, let it commit/push/open the PR, **then** write
+       the halt marker (`post-PR gate — <NNN> shipped`).
+   - Halt rows: the marker is written; report the reason to the user. If the row says
+     **+ ask**, pause and ask the user how to proceed (never guess on ambiguous/unsafe state).
+
+5. **Commit gate is mode-gated.** Reaching `BUILT` is the commit gate, and `/speclite-review`
+   runs just before it. In `default`/`semi-auto` the loop stops at the gate and the human runs
+   `/speclite-ship` — this skill must not commit, push, or open a PR. Only in `full-auto` does
+   this skill cross the gate by dispatching `/speclite-ship`, and only after review passes; it
+   always halts immediately after the PR is opened (never merges).
+
+## Mode loop
+
+The Stop hook (`hooks/mode-stop.sh`) drives chaining:
+- `specs/lite/.mode` is `default` / absent → no loop; this skill just runs once when invoked.
+- `.mode` is `semi-auto`/`full-auto` + no `.halt` → hook blocks the stop and re-runs this skill.
+- `.mode` is `semi-auto`/`full-auto` + `.halt` → hook allows the session to stop (gate reached).
+
+Because every halt path writes `.halt`, the loop always terminates — no infinite
+loop. Set the mode with `/speclite-mode default|semi-auto|full-auto`.
+
+## Boundaries
+
+- Owns no state; reads roadmap status + git state + `.mode` only.
+- Runs exactly one downstream skill per invocation, then halts or self-advances.
+- In `default`/`semi-auto`, never commits/pushes/opens a PR. In `full-auto`, crosses the
+  commit gate by dispatching `/speclite-ship` but always halts after the PR (never merges).
+- Halts and asks rather than guessing on any ambiguous or unsafe state.

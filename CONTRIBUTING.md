@@ -13,8 +13,8 @@ plugin and running the skills against a target repo.
 bin/install.js    cross-platform installer (pure Node, zero deps; target registry)
 package.json      minimal; "bin" entry enables the npx one-liner
 skills/           one SKILL.md per skill (shared — all platforms discover here)
-hooks/            hooks.json + autopilot-stop.sh (Stop hook for autopilot)
-templates/        roadmap.md, plan-template.md, system-prompt.md (source for speclite-init)
+hooks/            hooks.json + mode-stop.sh (Stop hook for loop modes)
+templates/        roadmap.md, plan-template.md, rules.md (source for speclite-init)
 specs/lite/       speclite's own roadmap (dogfooding)
 docs/             QUESTIONS.md (design decisions + rationale), design.md (prompt-flow sketch)
 ```
@@ -80,7 +80,7 @@ Window** after changes. No `marketplace.json` is needed (single-plugin repo).
 
 ## Editing templates (two-copy pattern)
 
-`templates/` holds the canonical source (`roadmap.md`, `plan-template.md`, `system-prompt.md`).
+`templates/` holds the canonical source (`roadmap.md`, `plan-template.md`, `rules.md`).
 `speclite-init` copies them into a target repo's `specs/lite/`, with an **inline fallback**
 embedded in `skills/speclite-init/SKILL.md` for when `CLAUDE_PLUGIN_ROOT` is unavailable.
 
@@ -98,19 +98,19 @@ Two consequences when editing templates:
 
 Cross-file conventions make the skills interoperate. Preserve these when editing any skill:
 
-- **Roadmap item id `R<NNN>`** (zero-padded, sequential, never reused) is the join key across
-  roadmap, plan filename, and branch name. Branch: `<type>/R<NNN>-<slug>`
+- **Roadmap item id `<NNN>`** (bare zero-padded, sequential, never reused) is the join key across
+  roadmap, plan filename, and branch name. Branch: `<type>/<NNN>-<slug>`
   (type ∈ feat fix chore docs refactor perf test build ci style revert), or
-  `<type>/R<NNN>-<issue_id>-<slug>` when an issue exists. Plan: `specs/lite/<NNN>-<slug>-plan.md`.
+  `<type>/<NNN>-<issue_id>-<slug>` when an issue exists. Plan: `specs/lite/<NNN>-<slug>-plan.md`.
 - **Status single source of truth = roadmap heading suffix** (` - PLANNED` / ` - WIP` /
-  ` - DONE`; none = backlog). No duplicate status in plan frontmatter.
-- **`specs/lite/system-prompt.md` is read first by every skill** and overrides a skill's own
+  ` - BUILT` / ` - SHIPPED`; none = backlog). No duplicate status in plan frontmatter.
+- **`specs/lite/rules.md` is read first by every skill** and overrides a skill's own
   instructions on conflict (Step 0 of each SKILL.md).
 - **Skills pause and ask** rather than guess on state-check fails (not on trunk, dirty tree,
-  missing/already-DONE item, branch without an `R<NNN>` segment).
+  missing/already-shipped item, branch without an `<NNN>` segment).
 - **Trunk auto-detected** via `origin/HEAD`, fallback to first existing of `main`/`master`/`develop`.
-- **Autopilot markers** live in `specs/lite/` and are git-ignored: `.mode` (contents =
-  `default`/`semi-auto`/`full-auto`, set via `/speclite-mode`) and `.autopilot-halt`
+- **Mode markers** live in `specs/lite/` and are git-ignored: `.mode` (contents =
+  `default`/`semi-auto`/`full-auto`, set via `/speclite-mode`) and `.halt`
   (transient stop signal). `default`/`semi-auto` **never** auto-commit; `full-auto` auto
   commits + pushes + opens a PR, then halts after the PR (never merges).
 

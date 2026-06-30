@@ -1,9 +1,9 @@
 ---
-roadmap_id: R<NNN>
+roadmap_id: <NNN>
 issue: <id or n/a>
 ---
 
-# Plan: R<NNN> <title>
+# Plan: <NNN> <title>
 
 Drop any section that adds no signal for this item — keep what helps, skip the rest.
 
@@ -13,7 +13,7 @@ Summarize the roadmap item text. Why this work. What this must do. Bullet the co
 
 ## Acceptance criteria
 
-Testable conditions that must all be true to mark the item DONE.
+Testable conditions that must all be true to mark the item BUILT.
 
 - [ ] Observable outcome 1
 - [ ] Observable outcome 2

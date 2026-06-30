@@ -62,7 +62,7 @@ and confirm in **Settings → Rules** that the speclite skills appear (Agent Dec
 | Feature | Claude Code | Copilot CLI | VS Code / Copilot | Cursor |
 |---------|-------------|-------------|-------------------|--------|
 | Skills (`skills/*/SKILL.md`) | ✓ | ✓ | ✓ (preview) | ✓ |
-| Stop hook (autopilot) | ✓ | ✓ | ✓ (Claude-format) | ✓ |
+| Stop hook (loop modes) | ✓ | ✓ | ✓ (Claude-format) | ✓ |
 | Hook matchers | ✓ | ✓ | ignored | partial |
 | Install | `claude plugin install` | `copilot plugin install` | auto-discovers Copilot installs | local copy |
 | Preview flag | — | — | `chat.plugins.enabled` | — |

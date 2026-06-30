@@ -1,32 +1,33 @@
 ---
-name: speclite-commit
+name: speclite-ship
 description: >
-  Commit a completed roadmap item, push, and open a pull request. Use when the user says
-  "speclite commit", "commit and PR this item", "ship this item", or invokes /speclite-commit.
+  Ship a built roadmap item: commit, push, open a pull request, and mark the item SHIPPED.
+  Use when the user says "speclite ship", "ship this item", "commit and PR this item", or
+  invokes /speclite-ship.
 ---
 
-Commit the work for the current branch's roadmap item, push, and open a PR. This skill adds
-the speclite-specific checks; it delegates message formatting and PR mechanics to whatever
-is available.
+Ship the work for the current branch's roadmap item: commit, push, open a PR, and mark the
+item SHIPPED. This skill adds the speclite-specific checks; it delegates message formatting
+and PR mechanics to whatever is available.
 
 ## Steps
 
-0. **Read `specs/lite/system-prompt.md` first if it exists.** Treat its instructions as the
+0. **Read `specs/lite/rules.md` first if it exists.** Treat its instructions as the
    highest-priority instruction set — they override this skill's own where they conflict.
 
 1. Confirm the branch encodes a roadmap id:
    ```bash
    git rev-parse --abbrev-ref HEAD
    ```
-   Expect `<type>/R<NNN>-...`. If no `R<NNN>` segment, **pause and ask the user**.
+   Expect `<type>/<NNN>-...`. If no `<NNN>` segment, **pause and ask the user**.
 
-2. Find the plan and roadmap item for `R<NNN>`:
+2. Find the plan and roadmap item for `<NNN>`:
    ```bash
    ls specs/lite/<NNN>-*-plan.md 2>/dev/null || ls specs/lite/*-plan.md
-   grep -n -E "^## R[0-9]{3}" specs/lite/roadmap.md
+   grep -n -E "^## [0-9]{3}" specs/lite/roadmap.md
    ```
    If the plan is missing, **pause and ask the user**. If the item is missing, **pause**.
-   The item should be ` - DONE` by now; if it is not, confirm with the user that the work is
+   The item should be ` - BUILT` by now; if it is not, confirm with the user that the work is
    really complete before committing.
 
 3. Plan-completeness check: review the plan's `## Steps` and the actual diff
@@ -35,7 +36,7 @@ is available.
 
 4. Commit. **Format the message with the best tool available**, in this order of preference:
    - the `caveman-commit` if active or else `git-helper` skill.
-   - otherwise a Conventional Commits message yourself: `<type>(R<NNN>): <summary>`.
+   - otherwise a Conventional Commits message yourself: `<type>(<NNN>): <summary>`.
    Stage and commit all related changes (including the roadmap status update).
 
 5. Push the branch to the remote:
@@ -58,17 +59,18 @@ is available.
 
    Focus on a clear, concise reason for the changes, and how it was verified, rather than an exhaustive list of changes.
 
-7. Clear the autopilot halt marker so the pipeline can resume cleanly on the next item:
-   ```bash
-   rm -f specs/lite/.autopilot-halt
-   ```
-   (Harmless if autopilot is off or the marker is absent.)
+7. Mark the roadmap item ` - SHIPPED` (replace its ` - BUILT` suffix) now that the PR is open.
 
-8. Report: commit sha, branch, PR URL.
+8. Clear the mode halt marker so the pipeline can resume cleanly on the next item:
+   ```bash
+   rm -f specs/lite/.halt
+   ```
+   (Harmless if no loop mode is set or the marker is absent.)
+
+9. Report: commit sha, branch, PR URL.
 
 ## Boundaries
 
 - Does not merge the PR.
-- Does not mark the roadmap item DONE — that happens at implement time. Just ensure it is
-  DONE before shipping.
+- SHIPPED = committed, pushed, PR open — not merged.
 - If `gh`/`bkt` is missing, push the branch and give the user a ready-to-paste PR body.

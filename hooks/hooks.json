@@ -1,12 +1,12 @@
 {
-  "description": "Stop hook for speclite autopilot. Command paths use ${CLAUDE_PLUGIN_ROOT} (Claude-native); Cursor also expands this variable when spawning plugin hooks — no user env setup or CURSOR_PLUGIN_ROOT needed.",
+  "description": "Stop hook for speclite loop modes. Command paths use ${CLAUDE_PLUGIN_ROOT} (Claude-native); Cursor also expands this variable when spawning plugin hooks — no user env setup or CURSOR_PLUGIN_ROOT needed.",
   "hooks": {
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/autopilot-stop.sh"
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/mode-stop.sh"
           }
         ]
       }

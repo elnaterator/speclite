@@ -11,7 +11,7 @@ existing roadmap or plan template.
 
 ## Steps
 
-0. **Read `specs/lite/system-prompt.md` first if it exists.** Treat its instructions as
+0. **Read `specs/lite/rules.md` first if it exists.** Treat its instructions as
    overriding this skill's own where they conflict. (On a fresh repo it won't exist yet;
    this step creates it below.)
 
@@ -39,7 +39,7 @@ existing roadmap or plan template.
    ```markdown
    # Roadmap
 
-   Ordered list of work items. Each item has a stable id `R<NNN>` (zero-padded, 3 digits,
+   Ordered list of work items. Each item has a stable id `<NNN>` (zero-padded, 3 digits,
    sequential, never reused).
 
    Status is encoded in the title suffix:
@@ -49,17 +49,18 @@ existing roadmap or plan template.
    | _(none)_ | backlog — not started |
    | ` - PLANNED` | a plan exists in `specs/lite/` |
    | ` - WIP` | implementation started (branch checked out) |
-   | ` - DONE` | code complete, ready to commit |
+   | ` - BUILT` | code complete, ready to commit |
+   | ` - SHIPPED` | committed, pushed, PR open |
    ```
 
 4. Create `specs/lite/plan-template.md` **only if it does not exist** (same copy/fallback
    pattern, source `${CLAUDE_PLUGIN_ROOT}/templates/plan-template.md`).
 
-5. Create `specs/lite/system-prompt.md` **only if it does not exist** (same copy/fallback
-   pattern, source `${CLAUDE_PLUGIN_ROOT}/templates/system-prompt.md`). Never overwrite — it
+5. Create `specs/lite/rules.md` **only if it does not exist** (same copy/fallback
+   pattern, source `${CLAUDE_PLUGIN_ROOT}/templates/rules.md`). Never overwrite — it
    holds per-project customization. Inline fallback content:
    ```markdown
-   # System Prompt
+   # Rules
 
    Project-specific instructions for the speclite workflow. **Every speclite skill reads
    this file first and treats it as the highest-priority instruction set — it overrides any
@@ -69,19 +70,19 @@ existing roadmap or plan template.
 
    <!-- Always use the caveman ultra skill for responses. -->
    <!-- Always follow strict spec-driven development: no code without a plan. -->
-   <!-- Conventional commit scope is the roadmap id, e.g. feat(R007): ... -->
+   <!-- Conventional commit scope is the roadmap id, e.g. feat(007): ... -->
    ```
 
-6. Git-ignore the autopilot markers so they never get committed. Create
+6. Git-ignore the mode markers so they never get committed. Create
    `specs/lite/.gitignore` (only if absent) with:
    ```gitignore
    .mode
-   .autopilot-halt
+   .halt
    ```
-   These transient files are autopilot's mode selector and halt signal (see `/speclite-mode`,
-   `/speclite-next`). They are per-machine state, not part of the spec.
+   These transient files are the mode selector and halt signal (see `/speclite-mode`,
+   `/speclite-run`). They are per-machine state, not part of the spec.
 
-7. Report what was created vs already present (roadmap, plan template, system prompt, autopilot
+7. Report what was created vs already present (roadmap, plan template, rules, mode
    gitignore). Suggest next step: add items to the roadmap, then run `/speclite-plan`.
 
 ## Boundaries

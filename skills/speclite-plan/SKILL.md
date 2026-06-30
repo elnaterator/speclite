@@ -12,14 +12,14 @@ plans, follow their request.
 
 ## Steps
 
-0. **Read `specs/lite/system-prompt.md` first if it exists.** Treat its instructions as the
+0. **Read `specs/lite/rules.md` first if it exists.** Treat its instructions as the
    highest-priority instruction set — they override this skill's own where they conflict.
 
 1. List roadmap items with their status:
    ```bash
-   grep -n -E "^## R[0-9]{3}" specs/lite/roadmap.md
+   grep -n -E "^## [0-9]{3}" specs/lite/roadmap.md
    ```
-   Status is the title suffix: _(none)_=backlog, ` - PLANNED`, ` - WIP`, ` - DONE`.
+   Status is the title suffix: _(none)_=backlog, ` - PLANNED`, ` - WIP`, ` - BUILT`, ` - SHIPPED`.
 
 2. List existing plans:
    ```bash
@@ -46,9 +46,9 @@ plans, follow their request.
 6. Create the branch. Pick `<type>` from the item kind:
    `feat`, `fix`, `chore`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `style`, `revert`.
    ```bash
-   git checkout -b "<type>/R<NNN>-<slug>"
+   git checkout -b "<type>/<NNN>-<slug>"
    ```
-   Include the issue id when the item has one: `<type>/R<NNN>-<issue_id>-<slug>`.
+   Include the issue id when the item has one: `<type>/<NNN>-<issue_id>-<slug>`.
    `<slug>` is a short kebab-case summary.
 
 7. Create the plan from the template:
@@ -56,12 +56,12 @@ plans, follow their request.
    cp specs/lite/plan-template.md "specs/lite/<NNN>-<slug>-plan.md"
    ```
    Fill in the plan: context (from the roadmap text), approach, concrete steps, files,
-   testing, out-of-scope. Replace the `R<NNN>`, branch, and issue placeholders.
+   testing, out-of-scope. Replace the `<NNN>`, branch, and issue placeholders.
 
-8. Mark the roadmap item ` - PLANNED` (append suffix to its `## R<NNN> ...` heading; replace
+8. Mark the roadmap item ` - PLANNED` (append suffix to its `## <NNN> ...` heading; replace
    any existing status suffix). Leave roadmap edits uncommitted for the user to review.
 
-9. Report: item chosen, branch created, plan path. Suggest `/speclite-implement` next.
+9. Report: item chosen, branch created, plan path. Suggest `/speclite-build` next.
 
 ## Boundaries
 
