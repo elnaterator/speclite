@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "speclite",
-  "version": "0.2.0",
-  "description": "Lightweight spec-driven development for Claude Code, GitHub Copilot (CLI + VS Code), and Cursor. Roadmap + per-item plans + git-branch-per-item workflow. Skills for init, plan, implement, review, commit, plus an optional autopilot (next dispatcher + Stop hook).",
+  "version": "0.3.0",
+  "description": "Lightweight spec-driven development for Claude Code, GitHub Copilot (CLI + VS Code), and Cursor. Roadmap + per-item plans + git-branch-per-item workflow. Skills for init, plan, build, review, ship, plus optional loop modes (run dispatcher + Stop hook).",
   "author": {
     "name": "Nathan Hadzariga"
   },

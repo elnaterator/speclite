@@ -12,31 +12,31 @@ speclite = **tri-platform plugin** (Claude Code + GitHub Copilot [CLI + VS Code]
 
 Core skills form pipeline. Default: 1 roadmap item = 1 plan = 1 git branch.
 
-- `speclite-init` — scaffold `specs/lite/` (roadmap, plan template, system prompt). Idempotent, never overwrites.
+- `speclite-init` — scaffold `specs/lite/` (roadmap, plan template, rules). Idempotent, never overwrites.
 - `speclite-plan` — pick next backlog item, create branch, write plan, mark `PLANNED`.
-- `speclite-implement` — implement branch's plan, mark `WIP` → `DONE`.
-- `speclite-review` (R011) — review branch diff vs plan acceptance criteria + system prompt, flag drift (missing criteria, scope creep, unverified claims). Runs between `DONE` and commit. Report-only by default; **conditional** (skips trivial diffs) under autopilot; in full-auto auto-fixes failed findings and re-reviews up to a 3-attempt cap, else halts.
-- `speclite-commit` — plan-completeness check, commit, push, open PR.
+- `speclite-build` — build branch's plan, mark `WIP` → `BUILT`.
+- `speclite-review` (011) — review branch diff vs plan acceptance criteria + rules, flag drift (missing criteria, scope creep, unverified claims). Runs between `BUILT` and commit. Report-only by default; **conditional** (skips trivial diffs) under a loop mode; in full-auto auto-fixes failed findings and re-reviews up to a 3-attempt cap, else halts.
+- `speclite-ship` — plan-completeness check, commit, push, open PR, mark `SHIPPED`.
 
-`DONE` = code complete, verified locally, **not merged**.
+`BUILT` = code complete, verified locally, **not merged**. `SHIPPED` = committed, pushed, PR open.
 
-**Optional autopilot (R006, R010):** `speclite-next` = state-machine dispatcher that reads roadmap+git state and runs the right next skill (init/plan/implement/review), halting at gates. `speclite-mode default|semi-auto|full-auto` sets the mode (`specs/lite/.mode`). A bundled **Stop hook** (`hooks/autopilot-stop.sh`, registered in `hooks/hooks.json`) re-triggers `speclite-next` while the mode is a loop mode, so the pipeline self-advances. At `DONE`, `speclite-next` runs `speclite-review` inline before the commit gate (review halts the loop on FAIL / non-convergence). **semi-auto** halts at the pre-commit gate (human runs `speclite-commit`); **full-auto** crosses it — after review passes, `speclite-next` dispatches `speclite-commit` and halts after the PR (never merges). `default` = no autopilot.
+**Optional loop modes (006, 010):** `speclite-run` = state-machine dispatcher that reads roadmap+git state and runs the right next skill (init/plan/build/review), halting at gates. `speclite-mode default|semi-auto|full-auto` sets the mode (`specs/lite/.mode`). A bundled **Stop hook** (`hooks/mode-stop.sh`, registered in `hooks/hooks.json`) re-triggers `speclite-run` while the mode is a loop mode, so the pipeline self-advances. At `BUILT`, `speclite-run` runs `speclite-review` inline before the commit gate (review halts the loop on FAIL / non-convergence). **semi-auto** halts at the pre-commit gate (human runs `speclite-ship`); **full-auto** crosses it — after review passes, `speclite-run` dispatches `speclite-ship` and halts after the PR (never merges). `default` = no loop.
 
 ## Core architecture & invariants
 
 Cross-file conventions make skills interoperate. Preserve when editing any skill:
 
-- **Roadmap item id `R<NNN>`** (zero-padded 3-digit, sequential, never reused) = join key across roadmap, plan filename, branch name. Branch: `<type>/R<NNN>-<slug>` (type ∈ feat fix chore docs refactor perf test build ci style revert), or `<type>/R<NNN>-<issue_id>-<slug>` when issue exists. Plan filename: `specs/lite/<NNN>-<slug>-plan.md`.
-- **Status single source of truth = roadmap heading suffix** (` - PLANNED` / ` - WIP` / ` - DONE`; none = backlog). No duplicate status in plan frontmatter — plans carry only `roadmap_id` + `issue`.
-- **`specs/lite/system-prompt.md` read first by every skill**, overrides skill's own instructions on conflict. Step 0 of each SKILL.md enforces this.
-- **Skills pause and ask user** rather than guess on state-check fails (not on trunk, dirty tree, missing/already-DONE item, branch without `R<NNN>` segment). Keep defensive posture in new skills.
+- **Roadmap item id `<NNN>`** (bare zero-padded 3-digit, sequential, never reused) = join key across roadmap, plan filename, branch name. Branch: `<type>/<NNN>-<slug>` (type ∈ feat fix chore docs refactor perf test build ci style revert), or `<type>/<NNN>-<issue_id>-<slug>` when issue exists. Plan filename: `specs/lite/<NNN>-<slug>-plan.md`.
+- **Status single source of truth = roadmap heading suffix** (` - PLANNED` / ` - WIP` / ` - BUILT` / ` - SHIPPED`; none = backlog). No duplicate status in plan frontmatter — plans carry only `roadmap_id` + `issue`.
+- **`specs/lite/rules.md` read first by every skill**, overrides skill's own instructions on conflict. Step 0 of each SKILL.md enforces this.
+- **Skills pause and ask user** rather than guess on state-check fails (not on trunk, dirty tree, missing/already-shipped item, branch without `<NNN>` segment). Keep defensive posture in new skills.
 - **Trunk auto-detected** via `origin/HEAD`, fallback to first existing of `main`/`master`/`develop`.
-- **Autopilot markers live in `specs/lite/`** and are git-ignored (`speclite-init` writes `specs/lite/.gitignore`): `.mode` (contents = `default`/`semi-auto`/`full-auto`, user intent; absent ⇒ `default`) and `.autopilot-halt` (transient stop signal, reason as contents). `speclite-next` clears any stale `.autopilot-halt` at start, writes it on every halt path; Stop hook allows stop when mode is `default`/absent OR halt present, blocks-and-continues only when mode is a loop mode + no halt. This makes every termination explicit (no infinite loop). `default`/`semi-auto` **never** auto-commit/push/PR; **full-auto** deliberately does (commit + push + open PR) but always halts after the PR — never merges.
+- **Mode markers live in `specs/lite/`** and are git-ignored (`speclite-init` writes `specs/lite/.gitignore`): `.mode` (contents = `default`/`semi-auto`/`full-auto`, user intent; absent ⇒ `default`) and `.halt` (transient stop signal, reason as contents). `speclite-run` clears any stale `.halt` at start, writes it on every halt path; Stop hook allows stop when mode is `default`/absent OR halt present, blocks-and-continues only when mode is a loop mode + no halt. This makes every termination explicit (no infinite loop). `default`/`semi-auto` **never** auto-commit/push/PR; **full-auto** deliberately does (commit + push + open PR) but always halts after the PR — never merges.
 - **Plugin hooks**: `hooks/hooks.json` auto-discovered (no plugin.json field). Stop event ignores `matcher`; command uses `"${CLAUDE_PLUGIN_ROOT}"/hooks/...`. Block-and-continue via stdout JSON `{"decision":"block","hookSpecificOutput":{"hookEventName":"Stop","additionalContext":"…"}}` — `additionalContext` is fed to Claude, `reason` only to the user.
 
 ## Template sourcing (two-copy pattern)
 
-`templates/` holds canonical source (`roadmap.md`, `plan-template.md`, `system-prompt.md`). `speclite-init` copies them into target repo's `specs/lite/`, with **inline fallback** (embedded in `speclite-init/SKILL.md`) for when `CLAUDE_PLUGIN_ROOT` unavailable.
+`templates/` holds canonical source (`roadmap.md`, `plan-template.md`, `rules.md`). `speclite-init` copies them into target repo's `specs/lite/`, with **inline fallback** (embedded in `speclite-init/SKILL.md`) for when `CLAUDE_PLUGIN_ROOT` unavailable.
 
 Two consequences when editing templates:
 - Change template structure → update matching inline-fallback block in `speclite-init/SKILL.md` so two stay equivalent.
@@ -64,5 +64,5 @@ Repo layout: `.claude-plugin/` (shared Claude-format manifest + marketplace, rea
 
 ## Conventions in this repo
 
-- Commit scope = roadmap id: `<type>(R<NNN>): <summary>`.
+- Commit scope = roadmap id: `<type>(<NNN>): <summary>`.
 - `docs/QUESTIONS.md` records design decisions + rationale; `docs/design.md` = original prompt-flow sketch. Consult before reworking workflow semantics.

@@ -1,3 +1,3 @@
-# System Prompt
+# Rules
 
 Use caveman ultra.
