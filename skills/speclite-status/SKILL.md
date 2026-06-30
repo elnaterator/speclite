@@ -51,10 +51,19 @@ time as a daily check or to preview the loop before committing to a loop mode.
      Status suffix: _(none)_=backlog, ` - PLANNED`, ` - WIP`, ` - BUILT`, ` - SHIPPED`.
    - The branch's roadmap item: parse `<NNN>` from the branch name (if it has one) and match
      it to a roadmap heading. No `<NNN>` segment ⇒ note "branch not tied to an item".
-   - Open PR for the branch (optional — never error if `gh` is absent or there is no PR):
+   - Open PR for the branch (optional — never error if the CLI is absent or there is no PR).
+     **Detect the backend from the remote** (`git remote -v`): if the host is Bitbucket
+     (contains `bitbucket`) use `bkt`, otherwise `gh`.
      ```bash
-     command -v gh >/dev/null 2>&1 && gh pr view --json number,title,url,state 2>/dev/null || echo "(no PR / gh unavailable)"
+     if git remote -v | grep -qi bitbucket; then
+       command -v bkt >/dev/null 2>&1 && bkt pr view 2>/dev/null || echo "(no PR / bkt unavailable)"
+     else
+       command -v gh >/dev/null 2>&1 && gh pr view --json number,title,url,state 2>/dev/null || echo "(no PR / gh unavailable)"
+     fi
      ```
+     (`bkt` = Bitbucket CLI, https://github.com/avivsinai/bitbucket-cli. If `bkt` errors with
+     `no such host` in a sandbox, add it to `sandbox.excludedCommands`; check auth with
+     `bkt auth status`.)
 
 3. **Compute the next step as a dry-run.** Apply the `speclite-run` decision table to the
    observed state and name the single action the dispatcher *would* take — **do not run it**.
@@ -80,6 +89,7 @@ time as a daily check or to preview the loop before committing to a loop mode.
 
 - Strictly read-only: no file writes, no git mutations, no commit/push/PR, no `.halt`
   writes, no dispatching of any other skill.
-- `gh` is optional — degrade gracefully (report "no PR / gh unavailable") rather than erroring.
+- The PR CLI (`gh` for GitHub, `bkt` for Bitbucket) is optional — degrade gracefully (report
+  "no PR / CLI unavailable") rather than erroring.
 - Reports the next step as a **dry-run preview** only; it never executes it.
 - Degrades gracefully when not initialized, on trunk/detached HEAD, or with no PR.

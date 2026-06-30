@@ -64,10 +64,11 @@ Reduce cognitive load with consistent, obvious naming across speclite. No backwa
 - `speclite-next` → `speclite-run`, `speclite-implement` → `speclite-build`, `speclite-commit` → `speclite-ship`
 Keep `specs/lite/` (no folder move). Rationale, full touch list, and acceptance criteria in the plan.
 
-## 014 Improve agent/skill support for the bkt CLI (Bitbucket)
+## 014 Improve agent/skill support for the bkt CLI (Bitbucket) - BUILT
 Some repos live on Bitbucket Data Center, not GitHub, so PR and repo operations use the `bkt` CLI, not `gh`. Make the relevant skills (e.g. `speclite-status`, `speclite-ship`) bkt-aware so they reliably pick and drive the right tool.
 - **Detect when to use bkt vs gh**: prefer `bkt` whenever the remote is Bitbucket (e.g. `git remote -v` shows `bitbucket`) or something in the project docs indicates bitbucket is used, otherwise `gh`. Skills should check the remote rather than assuming GitHub.
 - **Know how to use bkt**: cover the common flows — `bkt pr list --mine`, `bkt pr view <id>`, `bkt pr create`, `bkt pr edit <id> --body`, `bkt pr comment`. Note that `bkt pr edit --body` replaces the whole description, and that `--jq` returns JSON-encoded strings (decode before writing back, or the body gets double-escaped).
 - **Instruct on basic config issues** (keep guidance very short and concise but clear):
   - `no such host` for DNS or TLS trust wall issues due to running commands in sandbox: add `bkt` to `sandbox.excludedCommands` (claude code) to run it unsandboxed.
-  - Auth: `bkt auth status` to check, `bkt auth login https://code.experian.local` to (re)authenticate.
+  - Auth: `bkt auth status` to check, `bkt auth login https://my.company.local` to (re)authenticate.
+- Check more at https://github.com/avivsinai/bitbucket-cli
