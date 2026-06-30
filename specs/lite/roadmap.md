@@ -55,7 +55,7 @@ When run under a loop mode (`speclite-run` dispatch), review is **conditional, n
 ## 012 speclite-status skill - SHIPPED
 Add a read-only `speclite-status` skill that prints the current pipeline state at a glance: roadmap items by status (backlog/PLANNED/WIP/BUILT/SHIPPED), current branch + its roadmap item, mode (`.mode`) and any active `.halt`, open PR (via gh) for the branch, and what `speclite-run` would do next (dry-run of the dispatcher — compute the next step without executing it). No writes, no side effects, safe to run anytime. Reads `rules.md` first per convention. Useful as a daily check and to preview the loop before committing to a loop mode.
 
-## 013 usability refactor — clearer names, statuses, vocabulary - BUILT
+## 013 usability refactor — clearer names, statuses, vocabulary - SHIPPED
 Reduce cognitive load with consistent, obvious naming across speclite. No backwards-compat required (early, single-user). Mechanical renames:
 - `system-prompt.md` → `rules.md`
 - Status `DONE` → `BUILT`, add terminal `SHIPPED`: backlog → `PLANNED` → `WIP` → `BUILT` → `SHIPPED`
