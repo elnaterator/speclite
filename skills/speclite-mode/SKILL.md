@@ -39,19 +39,21 @@ Modes:
 
 3. **`full-auto`** — first **warn the user of the risk**: full-auto will commit, push, and
    open a PR with no human review gate; only the post-PR halt stops it. Then write the mode
-   and clear any stale halt so a fresh run starts clean:
+   and **write a halt marker so the loop does not start on its own** — the pipeline advances
+   only when the user runs `/speclite-run` (which clears the halt at its start):
    ```bash
    echo full-auto > specs/lite/.mode
-   rm -f specs/lite/.halt
+   echo "mode set to full-auto — run /speclite-run to start the loop" > specs/lite/.halt
    ```
-   Report: mode FULL-AUTO. Suggest running `/speclite-run` to start the loop.
+   Report: mode FULL-AUTO, loop armed but idle. Run `/speclite-run` to start it.
 
-4. **`semi-auto`** — write the mode and clear any stale halt:
+4. **`semi-auto`** — write the mode and **write a halt marker so the loop does not start on
+   its own** — it advances only when the user runs `/speclite-run`:
    ```bash
    echo semi-auto > specs/lite/.mode
-   rm -f specs/lite/.halt
+   echo "mode set to semi-auto — run /speclite-run to start the loop" > specs/lite/.halt
    ```
-   Report: mode SEMI-AUTO (halts before commit). Suggest `/speclite-run` to start the loop.
+   Report: mode SEMI-AUTO (halts before commit), loop idle. Run `/speclite-run` to start it.
 
 5. **`default`** — write the mode (the pipeline will no longer self-advance):
    ```bash
@@ -61,7 +63,9 @@ Modes:
 
 ## Boundaries
 
-- Only manages `specs/lite/.mode` (and clears `.halt` when enabling a loop mode).
-- Does not run any pipeline step — that is `/speclite-run`.
+- Only manages `specs/lite/.mode` (and, when enabling a loop mode, writes a `.halt` marker so
+  the loop stays idle until the user runs `/speclite-run`).
+- Does not run any pipeline step, and never starts the loop — that is `/speclite-run`. Setting
+  a loop mode only records intent; the pipeline advances only on an explicit `/speclite-run`.
 - Both `.mode` and `.halt` are git-ignored by `/speclite-init`; never commit them.
 - Setting `full-auto` must always surface the auto-commit/push/PR risk before writing it.
