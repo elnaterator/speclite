@@ -51,7 +51,8 @@ In scope:
 - [x] README skill table lists `speclite-roadmap`.
 - [~] Installed plugin exposes `/speclite-roadmap` — **deferred**: skills are
       auto-discovered and `bin/install.js` copies the repo tree wholesale (no per-skill
-      registry), so no code change is needed; the live reinstall was not run because
+      registry), so no code change is needed — `--dry-run --all` is clean for claude /
+      copilot / cursor. The live reinstall was not run because
       swapping the plugin cache mid-loop would pull the Stop hook out from under the
       running session. Verify with the reinstall block in Testing, then restart.
 
@@ -99,9 +100,9 @@ two people adding items from branches would collide on `<NNN>`.
 ## Testing
 
 ```bash
-# NOTE: `node` is not on PATH in this environment, so the installer dry-run below was not
-# executed. `bin/install.js` copies the repo tree via `copyDir` with top-level excludes and
-# has no per-skill registry, so a new skill dir needs no installer change.
+# NOTE: node lives in mise shims (`~/.local/share/mise/shims`, put on PATH by
+# ~/.dotfiles/dotfiles/.zshrc), which the agent's shell PATH omits — prepend it to run node.
+# Dry-run verified clean for all three targets.
 
 # frontmatter + structure sanity
 head -20 skills/speclite-roadmap/SKILL.md
