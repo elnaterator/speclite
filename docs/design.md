@@ -1,25 +1,23 @@
 
-
-
 # Prompts for automated scheduled tasks
 
 ## Initialize
 
 * Run `speclite init` to configure project
-    * Run `mkdir -p specs/lite`
-    * Create `specs/lite/plan-template.md`
-    * Create `specs/lite/roadmap.md`
-    * Create `specs/lite/system-prompt.md` (per-project instructions every skill reads first)
+  * Run `mkdir -p specs/lite`
+  * Create `specs/lite/plan-template.md`
+  * Create `specs/lite/roadmap.md`
+  * Create `specs/lite/system-prompt.md` (per-project instructions every skill reads first)
 
 ## Add item to roadmap from issue store (optional, requires add-on or plugin?)
 
 * Run `speclite issues setup` to configure issue store and credentials
 * Run `speclite issues list`
-    * Reads `~/.config/speclite/config.json` (read keys `issue_store_type` with values like `jira` or `github` and `issue_store_url`)
-    * Reads `~/.config/speclite/credentials` (e.g. Jira PAT)
+  * Reads `~/.config/speclite/config.json` (read keys `issue_store_type` with values like `jira` or `github` and `issue_store_url`)
+  * Reads `~/.config/speclite/credentials` (e.g. Jira PAT)
 * Pick an issue to add to the roadmap
-    * Runs `grep -n -E "## R\d\d\d" specs/lite/roadmap.md`
-    * Parses roadmap item ids, increment number, dumps issue content under heading like `## R<seq_num> <title>`, and include issue id
+  * Runs `grep -n -E "## R\d\d\d" specs/lite/roadmap.md`
+  * Parses roadmap item ids, increment number, dumps issue content under heading like `## R<seq_num> <title>`, and include issue id
 
 ## Plan
 
@@ -56,4 +54,3 @@ System prompt
 * Review changes, ensure plan is fully implemented, commit all changes
 * Push all changes to remote
 * Create pull request (use github or bitbucket MCP server) with sections: motivation, what changed, testing (with checkboxes)
-

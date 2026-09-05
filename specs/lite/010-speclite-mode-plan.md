@@ -12,6 +12,7 @@ Replace the binary `/speclite-auto on|off` toggle with a three-state mode select
 file whose contents are the literal mode string.
 
 Modes:
+
 - **default** — no autopilot. Pipeline only advances when a skill is invoked manually.
   Equivalent to today's `.autopilot` absent.
 - **semi-auto** — today's `.autopilot` behavior: Stop hook re-triggers `/speclite-next`,
@@ -72,6 +73,7 @@ risk warning (auto-commit/push/PR, no human gate). No arg → print current `.mo
 and ask.
 
 **Touches:**
+
 - `skills/speclite-auto/SKILL.md` → `skills/speclite-mode/SKILL.md` (mod, rename)
 - `skills/speclite-next/SKILL.md` (mod — read `.mode`, full-auto commit row)
 - `hooks/autopilot-stop.sh` (mod — `.mode` content read)

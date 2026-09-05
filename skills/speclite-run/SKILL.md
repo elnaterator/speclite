@@ -18,40 +18,53 @@ It is the engine of the loop modes: each run either advances the pipeline by one
    highest-priority instruction set — they override this skill's own where they conflict.
 
 1. **Clear any stale halt marker** at the start of the run:
+
    ```bash
    rm -f specs/lite/.halt
    ```
+
    The decision below re-creates it only if this run ends in a halt.
 
 2. **Observe state.**
    - Spec dir present?
+
      ```bash
      test -d specs/lite && echo present || echo missing
      ```
+
    - Mode (drives how far the loop advances):
+
      ```bash
      cat specs/lite/.mode 2>/dev/null || echo default
      ```
+
      `default` = manual; `semi-auto` = self-advance, halt before commit; `full-auto` =
      self-advance and also auto commit + PR, halt after PR.
    - Current branch + trunk:
+
      ```bash
      git rev-parse --abbrev-ref HEAD
      git symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'
      ```
+
      Fall back to the first of `main`, `master`, `develop` that exists for trunk.
    - Working tree clean? (uncommitted roadmap/plan edits are OK; unrelated changes are not.)
+
      ```bash
      git status --porcelain
      ```
+
    - Roadmap items + status:
+
      ```bash
      grep -n -E "^## [0-9]{3}" specs/lite/roadmap.md
      ```
+
      Status suffix: _(none)_=backlog, ` - PLANNED`, ` - WIP`, ` - BUILT`, ` - SHIPPED`.
 
 3. **Decide one action** from the table. On any **halt**, write the reason to the marker and
    stop (do not run another skill):
+
    ```bash
    echo "<reason>" > specs/lite/.halt
    ```
@@ -94,6 +107,7 @@ It is the engine of the loop modes: each run either advances the pipeline by one
 ## Mode loop
 
 The Stop hook (`hooks/mode-stop.sh`) drives chaining:
+
 - `specs/lite/.mode` is `default` / absent → no loop; this skill just runs once when invoked.
 - `.mode` is `semi-auto`/`full-auto` + no `.halt` → hook blocks the stop and re-runs this skill.
 - `.mode` is `semi-auto`/`full-auto` + `.halt` → hook allows the session to stop (gate reached).

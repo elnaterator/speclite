@@ -8,7 +8,7 @@ issue: n/a
 ## Overview
 
 Some repos live on Bitbucket Data Center, not GitHub, so PR/repo ops use the `bkt` CLI
-(https://github.com/avivsinai/bitbucket-cli), not `gh`. Today `speclite-ship` only briefly
+(<https://github.com/avivsinai/bitbucket-cli>), not `gh`. Today `speclite-ship` only briefly
 mentions `bkt` (step 6) and `speclite-status` hard-codes `gh pr view`. Make the PR-touching
 skills bkt-aware so they reliably pick and drive the right tool by inspecting the remote.
 
@@ -48,6 +48,7 @@ degrade as the skill already does (ship: print ready-to-paste PR body; status: r
 "no PR / CLI unavailable").
 
 **Touches:**
+
 - `skills/speclite-ship/SKILL.md` (mod) — expand step 6 backend selection, add bkt flows + gotchas + config notes.
 - `skills/speclite-status/SKILL.md` (mod) — make PR lookup backend-aware; note bkt in boundaries.
 

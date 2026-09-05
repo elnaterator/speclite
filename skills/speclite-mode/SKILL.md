@@ -33,6 +33,7 @@ Modes:
    `full-auto`, so a typo would silently degrade to semi-auto behavior.)
 
 2. Ensure the spec dir exists:
+
    ```bash
    test -d specs/lite || { echo "run /speclite-init first"; exit 1; }
    ```
@@ -41,24 +42,30 @@ Modes:
    open a PR with no human review gate; only the post-PR halt stops it. Then write the mode
    and **write a halt marker so the loop does not start on its own** — the pipeline advances
    only when the user runs `/speclite-run` (which clears the halt at its start):
+
    ```bash
    echo full-auto > specs/lite/.mode
    echo "mode set to full-auto — run /speclite-run to start the loop" > specs/lite/.halt
    ```
+
    Report: mode FULL-AUTO, loop armed but idle. Run `/speclite-run` to start it.
 
 4. **`semi-auto`** — write the mode and **write a halt marker so the loop does not start on
    its own** — it advances only when the user runs `/speclite-run`:
+
    ```bash
    echo semi-auto > specs/lite/.mode
    echo "mode set to semi-auto — run /speclite-run to start the loop" > specs/lite/.halt
    ```
+
    Report: mode SEMI-AUTO (halts before commit), loop idle. Run `/speclite-run` to start it.
 
 5. **`default`** — write the mode (the pipeline will no longer self-advance):
+
    ```bash
    echo default > specs/lite/.mode
    ```
+
    Report: mode DEFAULT. Loop off.
 
 ## Boundaries

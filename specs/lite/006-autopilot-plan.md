@@ -16,6 +16,7 @@ Stay true to the repo identity: **bash + markdown only, no binary, no build step
 CLI is a separate item (R007) and is not a dependency here.
 
 In scope:
+
 - `speclite-next` skill — state-machine dispatcher over the existing roadmap status.
 - Stop hook (bash) that re-invokes `speclite-next` while autopilot is enabled.
 - `speclite-auto` skill — `on|off` toggle for the enable flag.
@@ -68,10 +69,12 @@ state; it owns no state of its own.
 | Dirty tree / not-on-trunk-when-expected / branch lacks `R<NNN>` / missing item | **halt + ask** |
 
 **Loop control (no infinite loop).** Two markers in `specs/lite/`:
+
 - `.autopilot` — user intent, on while present. Toggled by `speclite-auto`.
 - `.autopilot-halt` — transient stop signal.
 
 Flow each turn:
+
 1. `speclite-next` deletes any stale `.autopilot-halt` at the start of its run.
 2. It decides + acts. If the decision is a halt (table above), it writes `.autopilot-halt`
    containing the reason.
@@ -92,6 +95,7 @@ so a fresh run starts clean). `off` → remove `specs/lite/.autopilot`. Reports 
 emits the block/allow JSON. Pure bash, no deps.
 
 **Touches:**
+
 - `skills/speclite-next/SKILL.md` (new) — dispatcher skill, Step 0 reads system-prompt.
 - `skills/speclite-auto/SKILL.md` (new) — on/off toggle.
 - `hooks/autopilot-stop.sh` (new) — Stop hook script.

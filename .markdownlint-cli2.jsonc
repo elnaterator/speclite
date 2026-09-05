@@ -1,0 +1,25 @@
+// speclite markdown lint config.
+// Waived rules fight formatting speclite depends on — see specs/lite/016-*-plan.md.
+{
+  "config": {
+    // Skills and plans are prose; wrapping is the author's call.
+    "MD013": false,
+    // Status suffixes are literally `` ` - PLANNED` `` — the leading space is content.
+    "MD038": false,
+    // `<NNN>`, `<slug>`, `<type>` placeholders parse as HTML tags.
+    "MD033": false,
+    // Compact table pipe style used throughout.
+    "MD060": false,
+    // Plans start with YAML frontmatter, not a heading.
+    "MD041": false,
+    // Every plan repeats `## Steps`, `## Testing`.
+    "MD024": false,
+    // Intentional blank lines between quoted blocks in docs.
+    "MD028": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": [
+    "node_modules",
+    ".git"
+  ]
+}

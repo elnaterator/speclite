@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  installer:
+    name: installer dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: List targets
+        run: node bin/install.js --list
+
+      # --all filters by detect() and exits 1 on a bare runner, so drive each
+      # target explicitly: --only bypasses detection, and every install path
+      # warns instead of failing when its CLI is absent.
+      - name: Install dry-run (each target)
+        run: |
+          for target in claude copilot cursor; do
+            echo "::group::install --only $target --dry-run"
+            node bin/install.js --only "$target" --dry-run
+            echo "::endgroup::"
+          done
+
+      - name: Uninstall dry-run (each target)
+        run: |
+          for target in claude copilot cursor; do
+            echo "::group::uninstall --only $target --dry-run"
+            node bin/install.js --only "$target" --uninstall --dry-run
+            echo "::endgroup::"
+          done
+
+  markdown:
+    name: markdown lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: markdownlint
+        run: npx -y markdownlint-cli2@0.23.2

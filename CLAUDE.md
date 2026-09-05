@@ -41,6 +41,7 @@ Cross-file conventions make skills interoperate. Preserve when editing any skill
 `templates/` holds canonical source (`roadmap.md`, `plan-template.md`, `rules.md`). `speclite-init` copies them into target repo's `specs/lite/`, with **inline fallback** (embedded in `speclite-init/SKILL.md`) for when `CLAUDE_PLUGIN_ROOT` unavailable.
 
 Two consequences when editing templates:
+
 - Change template structure → update matching inline-fallback block in `speclite-init/SKILL.md` so two stay equivalent.
 - Repo **dogfoods itself**: `specs/lite/` is speclite's own live roadmap/plans. After editing `templates/plan-template.md`, sync dogfood copy: `cp templates/plan-template.md specs/lite/plan-template.md`.
 
@@ -63,6 +64,36 @@ claude plugin install speclite@speclite     # reinstall picks up edits; restart 
 **Cursor:** symlink repo to `~/.cursor/plugins/local/speclite` for live edits; Developer: Reload Window after changes. No marketplace.json needed (single-plugin repo). (`node bin/install.js --only cursor` does a one-shot copy.)
 
 Repo layout: `.claude-plugin/` (shared Claude-format manifest + marketplace, read by Claude/Copilot/VS Code), `.cursor-plugin/` (Cursor manifest), `bin/install.js` + `package.json` (installer + npx), shared `skills/`, `hooks/`, `templates/`.
+
+## CI
+
+`.github/workflows/ci.yml` runs on push to `main` and on every PR — two jobs, no repo
+dependencies (Node + `npx` only):
+
+- **installer dry-run** — `--list`, then `--only <t> --dry-run` and
+  `--only <t> --uninstall --dry-run` for each of `claude` / `copilot` / `cursor`.
+  Do **not** switch this to `--all`: `--all` filters by `detect()` and fails with
+  `no targets detected` (exit 1) on a bare runner. `--only` bypasses detection, and every
+  install path treats `--dry-run` as a preview — a missing host CLI is a `warn`, not a
+  `fail` (`installClaude` and `installCopilot` both follow this convention). A **real**
+  install still fails on a missing host; only the preview is non-fatal. Keep that invariant
+  when adding a target, or CI goes red.
+- **markdown lint** — `npx -y markdownlint-cli2@0.23.2` over all `*.md`, configured by
+  `.markdownlint-cli2.jsonc`. Waived rules (MD013, MD038, MD033, MD060, MD041, MD024,
+  MD028) are the ones that fight speclite's deliberate formatting — notably MD038, because
+  status suffixes like `` ` - PLANNED` `` carry a meaningful leading space. Everything else
+  is enforced; fix violations rather than widening the waiver list.
+
+Run the same checks locally:
+
+```bash
+make ci      # installer dry-run + markdown lint
+make lint    # markdown lint only
+```
+
+Roadmap headings need a blank line before their body text (MD022). `templates/roadmap.md`
+and `speclite-roadmap` both teach that shape — keep them consistent or CI fails on the next
+roadmap commit.
 
 ## Conventions in this repo
 

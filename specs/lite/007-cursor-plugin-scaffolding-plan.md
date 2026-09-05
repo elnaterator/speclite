@@ -21,6 +21,7 @@ Per [Cursor plugin docs](https://cursor.com/docs/plugins#creating-plugins) and
   Claude's multi-plugin marketplace pattern or the template's `plugins/*` layout).
 
 In scope:
+
 - `.cursor-plugin/plugin.json` manifest (name, version, description, author, keywords).
 - Keep existing Claude-format `hooks/hooks.json` unchanged except a top-level `description`
   comment explaining why `${CLAUDE_PLUGIN_ROOT}` also works in Cursor (IDE-injected at runtime;
@@ -63,7 +64,7 @@ homebrew (R009).
 
 **Dual-manifest, shared components.** No fork of skills or templates.
 
-```
+```text
 speclite/
 ├── .claude-plugin/          # Claude Code (existing)
 │   ├── plugin.json
@@ -112,6 +113,7 @@ ln -sf "$(pwd)" ~/.cursor/plugins/local/speclite
 Unlike Claude's cache-copy model, symlink gives live edits — document this difference.
 
 **Touches:**
+
 - `.cursor-plugin/plugin.json` (new)
 - `hooks/hooks.json` (mod — add `description` comment only; keep `${CLAUDE_PLUGIN_ROOT}` path)
 - `README.md` (mod — Cursor install + layout; no hook env-var docs)
@@ -141,6 +143,7 @@ ln -sf "$(pwd)" ~/.cursor/plugins/local/speclite
 ```
 
 Manual checks:
+
 1. Settings → Rules: `speclite-init`, `speclite-plan`, `speclite-implement`, `speclite-commit`,
    `speclite-next`, `speclite-auto` skills visible.
 2. In empty repo: `/speclite-init` → creates `specs/lite/` with roadmap, plan template, system prompt.

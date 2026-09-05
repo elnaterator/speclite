@@ -1,5 +1,7 @@
 # speclite
 
+[![CI](https://github.com/elnaterator/speclite/actions/workflows/ci.yml/badge.svg)](https://github.com/elnaterator/speclite/actions/workflows/ci.yml)
+
 **Spec-driven development without the ceremony.** A roadmap of work items, a short plan per
 item, one git branch per item — driven by a handful of slash-command skills. No binary, no build step, no config sprawl. Just
 markdown and git.
@@ -7,7 +9,7 @@ markdown and git.
 You write a one-line roadmap item; speclite plans it, branches it, builds it, and opens the
 PR — pausing at every gate where a human should look.
 
-```
+```text
 /speclite-init   scaffold specs/lite/
 /speclite-plan   pick next item → branch → write a plan
 /speclite-build  build it → mark BUILT
@@ -31,7 +33,7 @@ PR — pausing at every gate where a human should look.
 Each work item moves through a simple lifecycle, with **status stored as the roadmap heading
 suffix** (the single source of truth):
 
-```
+```text
 (backlog) → PLANNED → WIP → BUILT → SHIPPED
 ```
 
@@ -97,7 +99,7 @@ mode with `/speclite-mode` (stored in `specs/lite/.mode`):
 
 ## How it's laid out
 
-```
+```text
 specs/lite/
   roadmap.md            # ordered items, ids 001, 002, … status in the title suffix
   plan-template.md      # template for per-item plans

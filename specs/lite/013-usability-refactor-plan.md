@@ -10,6 +10,7 @@ issue: n/a
 Reduce cognitive load across speclite by removing names that mislead. Six mechanical renames, no backwards-compat (early, single-user). The work is wide but shallow: change a token, keep behavior. The hard part is **consistency** — every skill, hook, template, manifest, installer, doc, and the dogfood `specs/lite/` must agree, or we re-introduce the dual-vocabulary smell we're killing.
 
 In scope:
+
 - `system-prompt.md` → `rules.md` (drop LLM jargon; keep read-first-overrides semantics).
 - Status `DONE` → `BUILT` (code complete, ready to commit) + new terminal `SHIPPED` (pushed + PR open). Lifecycle: backlog → `PLANNED` → `WIP` → `BUILT` → `SHIPPED`.
 - Unify "autopilot" → "mode" everywhere (hook file, halt marker, prose).
@@ -41,7 +42,7 @@ Pure rename refactor — no new behavior. Token → replacement:
 |-----|-----|-------|
 | `system-prompt.md` | `rules.md` | template, inline fallback in `speclite-init`, every Step-0 read |
 | status `DONE` | `BUILT` | "ready to commit" |
-| _(new)_ | `SHIPPED` | set by `speclite-commit` after PR |
+| *(new)* | `SHIPPED` | set by `speclite-commit` after PR |
 | `autopilot` | `mode` | prose + filenames |
 | `hooks/autopilot-stop.sh` | `hooks/mode-stop.sh` | + `hooks.json` command path |
 | `.autopilot-halt` | `.halt` | `.gitignore`, dispatcher writes/clears, settings.local permission |
@@ -53,6 +54,7 @@ Pure rename refactor — no new behavior. Token → replacement:
 Manifests (`plugin.json`, `marketplace.json`, cursor `plugin.json`) **auto-discover** skills — no skill list to edit, only the `description` prose ("autopilot", "implement") needs updating.
 
 **Touches** (from repo-wide grep):
+
 - Skill dirs (mod, some renamed): `skills/speclite-{init,plan,review,mode,status}/SKILL.md` (mod); `skills/speclite-implement/` → `skills/speclite-build/`, `skills/speclite-next/` → `skills/speclite-run/`, `skills/speclite-commit/` → `skills/speclite-ship/` (rename+mod each).
 - Hooks: `hooks/autopilot-stop.sh` → `hooks/mode-stop.sh` (rename+mod, internal `speclite-next`→`speclite-run`, `.autopilot-halt`→`.halt`); `hooks/hooks.json` (mod command path + description).
 - Templates (canonical): `templates/roadmap.md`, `templates/plan-template.md` (mod). Plus inline fallback inside `speclite-init/SKILL.md`.

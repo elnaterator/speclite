@@ -16,6 +16,7 @@ Status is encoded in the title suffix:
 <!-- Add items below. Example:
 
 ## 001 Example feature title
+
 Issue: PROJ-123   (optional, when pulled from an issue store)
 
 Short description of the work. Acceptance criteria, constraints, links.
