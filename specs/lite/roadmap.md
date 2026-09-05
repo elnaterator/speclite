@@ -77,7 +77,7 @@ Some repos live on Bitbucket Data Center, not GitHub, so PR and repo operations 
   - Auth: `bkt auth status` to check, `bkt auth login https://my.company.local` to (re)authenticate.
 - Check more at https://github.com/avivsinai/bitbucket-cli
 
-## 015 speclite-roadmap skill
+## 015 speclite-roadmap skill - SHIPPED
 Skill for shaping the roadmap itself: investigate an idea (research, clarifying questions, overlaps, scope splits), add well-formed items, refine the backlog. Writes findings to `research/`. No ceremony by default — commits straight to trunk, with defensive checks and a `rules.md` opt-out. Never run by the loop. Notes: `research/roadmap-skill.md`.
 
 ## 016 CI — installer dry-run + markdown lint
