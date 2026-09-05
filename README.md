@@ -26,6 +26,7 @@ PR — pausing at every gate where a human should look.
 | `speclite-run` | Dispatcher: read state, run the right next skill, halt at gates |
 | `speclite-mode` | Set the mode: default / semi-auto / full-auto |
 | `speclite-status` | Read-only: print pipeline state + a dry-run of what `run` would do |
+| `speclite-roadmap` | Shape the roadmap: investigate an idea, add items, groom the backlog |
 
 Each work item moves through a simple lifecycle, with **status stored as the roadmap heading
 suffix** (the single source of truth):
