@@ -9,3 +9,4 @@ Edit this file to set conventions for this project. A few examples (uncomment / 
 <!-- Always use the caveman ultra skill for responses. -->
 <!-- Always follow strict spec-driven development: no code without a plan. -->
 <!-- Conventional commit scope is the roadmap id, e.g. feat(007): ... -->
+<!-- Roadmap edits require a branch + PR (default: commit directly on trunk and push). -->

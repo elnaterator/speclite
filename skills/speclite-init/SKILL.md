@@ -71,6 +71,7 @@ existing roadmap or plan template.
    <!-- Always use the caveman ultra skill for responses. -->
    <!-- Always follow strict spec-driven development: no code without a plan. -->
    <!-- Conventional commit scope is the roadmap id, e.g. feat(007): ... -->
+   <!-- Roadmap edits require a branch + PR (default: commit directly on trunk and push). -->
    ```
 
 6. Git-ignore the mode markers so they never get committed. Create
