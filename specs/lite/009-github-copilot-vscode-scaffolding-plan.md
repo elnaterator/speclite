@@ -36,6 +36,7 @@ Per [VS Code agent plugins (preview)](https://code.visualstudio.com/docs/agent-c
   via `npx -y github:elnaterator/speclite` (npx fetches the repo and runs `bin/install.js`).
 
 In scope:
+
 - **`bin/install.js`** — the single, cross-platform installer (pure Node stdlib, zero runtime
   deps; a VERY simplified take on caveman's
   [`bin/install.js`](https://github.com/JuliusBrussee/caveman/blob/main/bin/install.js)). Built
@@ -134,7 +135,7 @@ Out of scope: VS Code Marketplace publish, enterprise marketplace admin, Visual 
 
 **Shared Claude-format plugin, one installer** — extend R007/R008 pattern, no skill/manifest fork.
 
-```
+```text
 speclite/
 ├── .claude-plugin/          # Claude Code + Copilot CLI + VS Code (shared Claude-format manifest)
 │   ├── plugin.json
@@ -151,7 +152,7 @@ speclite/
 └── scripts/                 # legacy install-*.sh (superseded by bin/install.js)
 ```
 
-**Compatibility matrix (research summary)**
+### Compatibility matrix (research summary)
 
 | Feature | Claude Code | Cursor | Copilot CLI | VS Code / Copilot |
 |---------|-------------|--------|-------------|-------------------|
@@ -172,7 +173,7 @@ A single Node script, pure stdlib, zero runtime deps, shebang `#!/usr/bin/env no
 stripped-down version of caveman's installer — drop the hooks/MCP/skills-profile/30-agent matrix;
 keep the shape (target table, arg parse, copy + JSON-merge helpers, dry-run, uninstall, list).
 
-```
+```text
 bin/install.js [flags]
   --only <id>          claude | copilot | cursor (repeatable). No --only/--all → print help.
   --all                install all detected targets
@@ -184,6 +185,7 @@ bin/install.js [flags]
 ```
 
 Structure (framework for easy extension):
+
 - `TARGETS` table = single source of truth: array of
   `{ id, label, detect(ctx), install(ctx), uninstall(ctx) }`. **Adding a new agent later = append
   one entry.** `main()` never changes.
@@ -212,6 +214,7 @@ Structure (framework for easy extension):
   `--only`/`--all` (with `detect` for `--all`) → run each target's `install`/`uninstall` → summary.
 
 **Touches:**
+
 - `bin/install.js` (new)
 - `package.json` (new — minimal, `"bin": { "speclite-install": "bin/install.js" }` for npx)
 - `Makefile` (mod — add `install-copilot`; point `install-cursor`/`install-claude`/`install-copilot`
@@ -265,6 +268,7 @@ node bin/install.js --only copilot          # or: make install-copilot
 ```
 
 Manual:
+
 1. `copilot plugin list` shows speclite; VS Code Chat → Configure Skills lists all six skills.
 2. Empty test repo: `/speclite-init` → `specs/lite/` scaffolded.
 3. `/speclite-auto on` + `/speclite-next` → Stop hook no "file not found"; halt marker behaves.

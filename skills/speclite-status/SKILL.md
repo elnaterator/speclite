@@ -19,41 +19,54 @@ time as a daily check or to preview the loop before committing to a loop mode.
    highest-priority instruction set — they override this skill's own where they conflict.
 
 1. **Check initialization.**
+
    ```bash
    test -d specs/lite && echo present || echo missing
    ```
+
    If missing: report "speclite not initialized in this repo" and suggest `/speclite-init`,
    then stop (skip the rest — nothing else to read).
 
 2. **Observe state** (same reads as `speclite-run`, but for reporting only):
    - Mode (absent ⇒ `default`):
+
      ```bash
      cat specs/lite/.mode 2>/dev/null || echo default
      ```
+
    - Active halt marker + its reason, if any:
+
      ```bash
      test -f specs/lite/.halt && cat specs/lite/.halt || echo "(none)"
      ```
+
    - Current branch + trunk:
+
      ```bash
      git rev-parse --abbrev-ref HEAD
      git symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'
      ```
+
      Fall back to the first of `main`, `master`, `develop` that exists for trunk.
    - Working tree state:
+
      ```bash
      git status --porcelain
      ```
+
    - Roadmap items + status:
+
      ```bash
      grep -n -E "^## [0-9]{3}" specs/lite/roadmap.md
      ```
+
      Status suffix: _(none)_=backlog, ` - PLANNED`, ` - WIP`, ` - BUILT`, ` - SHIPPED`.
    - The branch's roadmap item: parse `<NNN>` from the branch name (if it has one) and match
      it to a roadmap heading. No `<NNN>` segment ⇒ note "branch not tied to an item".
    - Open PR for the branch (optional — never error if the CLI is absent or there is no PR).
      **Detect the backend from the remote** (`git remote -v`): if the host is Bitbucket
      (contains `bitbucket`) use `bkt`, otherwise `gh`.
+
      ```bash
      if git remote -v | grep -qi bitbucket; then
        command -v bkt >/dev/null 2>&1 && bkt pr view 2>/dev/null || echo "(no PR / bkt unavailable)"
@@ -61,12 +74,13 @@ time as a daily check or to preview the loop before committing to a loop mode.
        command -v gh >/dev/null 2>&1 && gh pr view --json number,title,url,state 2>/dev/null || echo "(no PR / gh unavailable)"
      fi
      ```
-     (`bkt` = Bitbucket CLI, https://github.com/avivsinai/bitbucket-cli. If `bkt` errors with
+
+     (`bkt` = Bitbucket CLI, <https://github.com/avivsinai/bitbucket-cli>. If `bkt` errors with
      `no such host` in a sandbox, add it to `sandbox.excludedCommands`; check auth with
      `bkt auth status`.)
 
 3. **Compute the next step as a dry-run.** Apply the `speclite-run` decision table to the
-   observed state and name the single action the dispatcher *would* take — **do not run it**.
+   observed state and name the single action the dispatcher _would_ take — **do not run it**.
    This is a preview only. Match exactly one row:
    - `specs/lite/` missing → would run `speclite-init`.
    - On trunk, a backlog item exists, tree clean → would run `speclite-plan`.

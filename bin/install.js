@@ -336,10 +336,16 @@ function installCopilot(ctx) {
   // Fallback: no copilot CLI. If VS Code is present, register a local copy
   // via chat.pluginLocations + enable the preview flag.
   if (!vscodePresent()) {
-    fail(
-      "neither the `copilot` CLI nor VS Code was found — install the Copilot CLI " +
-        "(github.com/github/copilot-cli) or VS Code with Copilot, then re-run"
-    );
+    // Same convention as installClaude: a dry-run is a preview, so a missing
+    // host is a warning, not a failure. Keeps `--dry-run` usable as a smoke
+    // test on a bare machine (e.g. CI) while a real install still fails.
+    if (!ctx.dry) {
+      fail(
+        "neither the `copilot` CLI nor VS Code was found — install the Copilot CLI " +
+          "(github.com/github/copilot-cli) or VS Code with Copilot, then re-run"
+      );
+    }
+    warn("  [dry-run] neither copilot CLI nor VS Code found — preview only");
   }
   warn("  copilot CLI not found — using VS Code-only fallback (chat.pluginLocations).");
   rmDir(VSCODE_FALLBACK_DIR, ctx);

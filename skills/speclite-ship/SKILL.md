@@ -16,16 +16,20 @@ and PR mechanics to whatever is available.
    highest-priority instruction set — they override this skill's own where they conflict.
 
 1. Confirm the branch encodes a roadmap id:
+
    ```bash
    git rev-parse --abbrev-ref HEAD
    ```
+
    Expect `<type>/<NNN>-...`. If no `<NNN>` segment, **pause and ask the user**.
 
 2. Find the plan and roadmap item for `<NNN>`:
+
    ```bash
    ls specs/lite/<NNN>-*-plan.md 2>/dev/null || ls specs/lite/*-plan.md
    grep -n -E "^## [0-9]{3}" specs/lite/roadmap.md
    ```
+
    If the plan is missing, **pause and ask the user**. If the item is missing, **pause**.
    The item should be ` - BUILT` by now; if it is not, confirm with the user that the work is
    really complete before committing.
@@ -40,25 +44,32 @@ and PR mechanics to whatever is available.
    Stage and commit all related changes (including the roadmap status update).
 
 5. Push the branch to the remote:
+
    ```bash
    git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
    ```
 
 6. Open a pull request. **Detect the backend from the remote** — do not assume GitHub:
+
    ```bash
    git remote -v
    ```
+
    If the URL host is Bitbucket (e.g. contains `bitbucket`, or project docs say the repo
    lives on Bitbucket Data Center) use `bkt`; otherwise use `gh`.
 
    - **GitHub** → use the `gh` CLI:
+
      ```bash
      gh pr create --title "..." --body "..."
      ```
-   - **Bitbucket** → use the `bkt` CLI (https://github.com/avivsinai/bitbucket-cli):
+
+   - **Bitbucket** → use the `bkt` CLI (<https://github.com/avivsinai/bitbucket-cli>):
+
      ```bash
      bkt pr create --title "..." --description "..."
      ```
+
      Common flows: `bkt pr list --mine`, `bkt pr view <id>`, `bkt pr create`,
      `bkt pr edit <id> --body`, `bkt pr comment`. Check `bkt pr create --help` for exact flags.
      **Gotchas:** `bkt pr edit --body` replaces the *whole* description (not append); and
@@ -79,9 +90,11 @@ and PR mechanics to whatever is available.
 7. Mark the roadmap item ` - SHIPPED` (replace its ` - BUILT` suffix) now that the PR is open.
 
 8. Clear the mode halt marker so the pipeline can resume cleanly on the next item:
+
    ```bash
    rm -f specs/lite/.halt
    ```
+
    (Harmless if no loop mode is set or the marker is absent.)
 
 9. Report: commit sha, branch, PR URL.

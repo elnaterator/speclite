@@ -13,6 +13,7 @@ install → usage → deeper dives); new CONTRIBUTING.md = developer-facing (dev
 template-sync, dogfooding, conventions). Audit packaging/manifests for distribution.
 
 In scope:
+
 - Restructure README for new-user funnel: attention-grabbing intro, capability summary,
   install (both platforms), usage walkthrough, then deeper reference.
 - Move developer/dev-iteration content out of README into a new CONTRIBUTING.md.
@@ -48,6 +49,7 @@ within the first screen. CONTRIBUTING is the workshop — anything about editing
 plugin itself lives there.
 
 Proposed README outline:
+
 1. Title + one-line pitch + 2–3 sentence "what/why" hook.
 2. **Capabilities** — skill table + lifecycle/branch model, condensed.
 3. **Install** — Claude Code (marketplace add + install) and Cursor (symlink), end-user
@@ -61,6 +63,7 @@ Cursor symlink + Reload Window), template two-copy pattern + dogfood sync, commi
 conventions (roadmap-id scope), where design docs live (`docs/QUESTIONS.md`, `docs/design.md`).
 
 **Touches:**
+
 - `README.md` (mod) — restructure, trim dev content, fix roadmap blurb + placeholders.
 - `CONTRIBUTING.md` (new) — developer guide.
 - `.cursor-plugin/plugin.json` (mod) — fix description, version.

@@ -34,7 +34,7 @@ driver loop is redundant there — document it as the hook-less path only.
   frontmatter). speclite skills should work near-verbatim.
 - Custom prompts in `~/.codex/prompts` are deprecated in favor of skills.
 - Skills location / discovery mechanism: verify at
-  https://developers.openai.com/codex/skills before building.
+  <https://developers.openai.com/codex/skills> before building.
 - No Stop-hook equivalent known → driver loop via `codex exec`.
 - Open questions to record after live verify: slash-command syntax, implicit vs explicit
   invocation, whether `/speclite-run` works as prompt text.
@@ -43,10 +43,10 @@ driver loop is redundant there — document it as the hook-less path only.
 
 - Discovers `SKILL.md` skills GA. Scans `.opencode/skills`, `~/.config/opencode/skills`, and
   reportedly `.claude/skills` — verify which path is most reliable and prefer it.
-  Docs: https://opencode.ai/docs/
+  Docs: <https://opencode.ai/docs/>
 - Plugin `session.idle` event can re-prompt but races in headless mode. A proper
   `session.stopping` hook is an open upstream request:
-  https://github.com/anomalyco/opencode/issues/16626 . Revisit a native OpenCode loop plugin
+  <https://github.com/anomalyco/opencode/issues/16626> . Revisit a native OpenCode loop plugin
   when that lands; driver loop via `opencode run` until then.
 
 ## Shared installer shape

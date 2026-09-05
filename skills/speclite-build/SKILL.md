@@ -14,21 +14,27 @@ Build the plan for the roadmap item tied to the current branch.
    highest-priority instruction set — they override this skill's own where they conflict.
 
 1. Read the current branch and confirm it encodes a roadmap id:
+
    ```bash
    git rev-parse --abbrev-ref HEAD
    ```
+
    Expect `<type>/<NNN>-...`. If there is no `<NNN>` segment, **pause and ask the user**.
 
 2. Find the plan for `<NNN>`:
+
    ```bash
    ls specs/lite/<NNN>-*-plan.md 2>/dev/null || ls specs/lite/*-plan.md
    ```
+
    If no matching plan, **pause and ask the user** (offer to run `/speclite-plan`).
 
 3. Find the roadmap item:
+
    ```bash
    grep -n -E "^## [0-9]{3}" specs/lite/roadmap.md
    ```
+
    If the item is missing or already ` - BUILT`/` - SHIPPED`, **pause and ask the user**.
 
 4. Mark the item ` - WIP` (replace its current status suffix) to signal work started.

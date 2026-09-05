@@ -12,6 +12,7 @@ No writes, no side effects — safe to run anytime. Like `speclite-next`, it rea
 status + git + autopilot markers, but it **only reports** and never dispatches a skill.
 
 In scope:
+
 - Roadmap items grouped by status: backlog / PLANNED / WIP / DONE (with counts).
 - Current branch + the roadmap item it maps to (parse `R<NNN>` from branch).
 - Autopilot mode (`.mode`, default if absent) and any active `.autopilot-halt` (+ its reason).
@@ -45,6 +46,7 @@ gh usage must be optional: guard `gh pr view` behind a `command -v gh` check and
 no-PR exit so the skill never errors on a fresh branch or a machine without gh.
 
 **Touches:**
+
 - `skills/speclite-status/SKILL.md` (new)
 - `.claude-plugin/marketplace.json` / `.claude-plugin/plugin.json` (mod, only if they enumerate skills)
 - `.cursor-plugin/plugin.json` (mod, if it enumerates skills)

@@ -16,18 +16,22 @@ existing roadmap or plan template.
    this step creates it below.)
 
 1. Find the repo root:
+
    ```bash
    ROOT="$(git rev-parse --show-toplevel)"
    ```
+
    If not a git repo, ask the user whether to proceed in the current directory.
 
 2. Create the spec dir:
+
    ```bash
    mkdir -p "$ROOT/specs/lite"
    ```
 
 3. Create `specs/lite/roadmap.md` **only if it does not exist**. Prefer copying the bundled
    template; fall back to writing the content inline:
+
    ```bash
    SRC="${CLAUDE_PLUGIN_ROOT:-}/templates/roadmap.md"
    DEST="$ROOT/specs/lite/roadmap.md"
@@ -35,7 +39,9 @@ existing roadmap or plan template.
      if [ -f "$SRC" ]; then cp "$SRC" "$DEST"; else :; fi   # else write inline (below)
    fi
    ```
+
    Inline fallback content for `roadmap.md`:
+
    ```markdown
    # Roadmap
 
@@ -59,6 +65,7 @@ existing roadmap or plan template.
 5. Create `specs/lite/rules.md` **only if it does not exist** (same copy/fallback
    pattern, source `${CLAUDE_PLUGIN_ROOT}/templates/rules.md`). Never overwrite — it
    holds per-project customization. Inline fallback content:
+
    ```markdown
    # Rules
 
@@ -76,10 +83,12 @@ existing roadmap or plan template.
 
 6. Git-ignore the mode markers so they never get committed. Create
    `specs/lite/.gitignore` (only if absent) with:
+
    ```gitignore
    .mode
    .halt
    ```
+
    These transient files are the mode selector and halt signal (see `/speclite-mode`,
    `/speclite-run`). They are per-machine state, not part of the spec.
 

@@ -23,27 +23,36 @@ need-review gate (Step 3) may skip review for trivial changes, recording why.
    Note any opt-in to **always review**.
 
 1. Confirm the branch encodes a roadmap id:
+
    ```bash
    git rev-parse --abbrev-ref HEAD
    ```
+
    Expect `<type>/<NNN>-...`. If there is no `<NNN>` segment, **pause and ask the user**.
 
 2. **Observe state.**
    - Mode (drives failed-review handling):
+
      ```bash
      cat specs/lite/.mode 2>/dev/null || echo default
      ```
+
    - Trunk:
+
      ```bash
      git symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'
      ```
+
      Fall back to the first of `main`, `master`, `develop` that exists.
    - Find the plan for `<NNN>` and read its `## Acceptance criteria`:
+
      ```bash
      ls specs/lite/<NNN>-*-plan.md 2>/dev/null || ls specs/lite/*-plan.md
      ```
+
      If no plan, **pause and ask the user** (offer `/speclite-plan`).
    - Diff vs trunk (size feeds the need-review gate):
+
      ```bash
      git diff --stat "<trunk>"...HEAD
      git diff "<trunk>"...HEAD

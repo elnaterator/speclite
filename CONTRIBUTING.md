@@ -7,7 +7,7 @@ plugin and running the skills against a target repo.
 
 ## Repo layout
 
-```
+```text
 .claude-plugin/   Claude Code + Copilot CLI + VS Code: plugin.json, marketplace.json (shared Claude-format)
 .cursor-plugin/   Cursor: plugin.json
 bin/install.js    cross-platform installer (pure Node, zero deps; target registry)
@@ -90,6 +90,7 @@ Two consequences when editing templates:
   `speclite-init/SKILL.md` so the two stay equivalent.
 - The repo **dogfoods itself** — `specs/lite/` is speclite's own live roadmap/plans. After
   editing `templates/plan-template.md`, sync the dogfood copy:
+
   ```bash
   cp templates/plan-template.md specs/lite/plan-template.md
   ```

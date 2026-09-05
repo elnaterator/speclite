@@ -56,8 +56,8 @@ logged out, so nothing below is live-verified yet.
 
 ## Refs
 
-- https://kiro.dev/docs/hooks/
-- https://kiro.dev/docs/cli/v3/hooks-migration/
-- https://kiro.dev/docs/cli/2x-reference/ ("stop hook gained Block Decision support")
-- https://kiro.dev/docs/skills/
-- https://kiro.dev/docs/cli/headless/
+- <https://kiro.dev/docs/hooks/>
+- <https://kiro.dev/docs/cli/v3/hooks-migration/>
+- <https://kiro.dev/docs/cli/2x-reference/> ("stop hook gained Block Decision support")
+- <https://kiro.dev/docs/skills/>
+- <https://kiro.dev/docs/cli/headless/>

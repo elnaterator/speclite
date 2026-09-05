@@ -1,7 +1,7 @@
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 INSTALL := node $(REPO_ROOT)/bin/install.js
 
-.PHONY: help install install-cursor install-claude install-copilot uninstall list
+.PHONY: help install install-cursor install-claude install-copilot uninstall list lint ci
 .DEFAULT: help
 
 help: ## Show this help message
@@ -24,3 +24,13 @@ uninstall: ## Uninstall from all selected/detected targets
 
 list: ## List install targets and detection status
 	@$(INSTALL) --list
+
+lint: ## Lint all markdown (same check CI runs)
+	@npx -y markdownlint-cli2@0.23.2
+
+ci: ## Run the full CI suite locally (installer dry-run + markdown lint)
+	@$(INSTALL) --list
+	@for t in claude copilot cursor; do $(INSTALL) --only $$t --dry-run >/dev/null || exit 1; done
+	@for t in claude copilot cursor; do $(INSTALL) --only $$t --uninstall --dry-run >/dev/null || exit 1; done
+	@echo "installer dry-run OK"
+	@npx -y markdownlint-cli2@0.23.2

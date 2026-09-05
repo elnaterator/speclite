@@ -34,12 +34,14 @@ branch, no plan, no PR — commit on trunk and push, behind defensive checks.
    If the request is genuinely ambiguous, ask once, then proceed.
 
 2. **Observe** before writing anything:
+
    ```bash
    grep -n -E "^## [0-9]{3}" specs/lite/roadmap.md
    ls research/ 2>/dev/null
    ```
+
    Also read `docs/QUESTIONS.md` (design decisions + rationale) and any `research/*.md` that
-   looks related. Status suffix: _(none)_=backlog, ` - PLANNED`, ` - WIP`, ` - BUILT`,
+   looks related. Status suffix: *(none)*=backlog, ` - PLANNED`, ` - WIP`, ` - BUILT`,
    ` - SHIPPED`.
 
 3. **Run the flow.**
@@ -62,13 +64,16 @@ branch, no plan, no PR — commit on trunk and push, behind defensive checks.
    Append well-formed items to the end of the roadmap.
    - **Mint the next id**: max existing `<NNN>` + 1, zero-padded to 3 digits. Ids are
      sequential and **never reused** — compute from the roadmap headings, not a counter file:
+
      ```bash
      grep -E "^## [0-9]{3}" specs/lite/roadmap.md | sed -E 's/^## ([0-9]{3}).*/\1/' | sort -n | tail -1
      ```
+
      Mint ids **on trunk only** — adding items from a branch means two people mint the same
      `<NNN>`.
    - Shape: `## <NNN> <short title>` with **no status suffix** (new items are backlog),
-     followed by a few high-level lines — what and why, not how.
+     then a blank line, then a few high-level lines — what and why, not how. The blank
+     line after the heading keeps the roadmap markdown-lint clean.
    - **Keep items short.** Detail belongs in `research/<topic>.md`; the item links to it
      (`Notes: research/<topic>.md`). Implementation detail belongs in the plan phase.
 
@@ -91,24 +96,32 @@ branch, no plan, no PR — commit on trunk and push, behind defensive checks.
    on any failure rather than forcing:
 
    - **On trunk?** Auto-detect, fall back to the first of `main`/`master`/`develop`:
+
      ```bash
      git symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'
      git rev-parse --abbrev-ref HEAD
      ```
+
      Not on trunk → **pause and ask** (the branch may be mid-pipeline work).
    - **Tree clean** except `specs/lite/roadmap.md` and `research/`?
+
      ```bash
      git status --porcelain
      ```
+
      Unrelated changes → **pause and ask**.
    - **Commit** with the roadmap scope:
+
      ```bash
      git commit -m "chore(roadmap): <summary>"
      ```
+
    - **Rebase then push** (someone else may have minted ids meanwhile):
+
      ```bash
      git pull --rebase && git push
      ```
+
      A **rejected push** or a rebase conflict → **pause and ask**; never force-push.
 
    **Rules opt-in:** if `specs/lite/rules.md` says roadmap edits require a branch + PR, take
