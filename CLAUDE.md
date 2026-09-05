@@ -66,3 +66,4 @@ Repo layout: `.claude-plugin/` (shared Claude-format manifest + marketplace, rea
 
 - Commit scope = roadmap id: `<type>(<NNN>): <summary>`.
 - `docs/QUESTIONS.md` records design decisions + rationale; `docs/design.md` = original prompt-flow sketch. Consult before reworking workflow semantics.
+- `research/` = one article per topic (platform research, parallel-work ideas, open-source plan). Roadmap items stay concise and link here; the roadmap skill (015) creates/updates these.

@@ -4,6 +4,10 @@ speclite dogfoods itself. Items below track speclite's own development.
 
 Status suffix: _(none)_=backlog, ` - PLANNED`, ` - WIP`, ` - BUILT`, ` - SHIPPED`.
 
+Conventions: deeper research lives in `research/` (one article per topic); items link to it
+and stay concise. Every item updates docs (README, `docs/INSTALL.md`, `CLAUDE.md`) as part of
+its own scope.
+
 | Suffix | Meaning |
 |--------|---------|
 | _(none)_ | backlog — not started |
@@ -72,3 +76,15 @@ Some repos live on Bitbucket Data Center, not GitHub, so PR and repo operations 
   - `no such host` for DNS or TLS trust wall issues due to running commands in sandbox: add `bkt` to `sandbox.excludedCommands` (claude code) to run it unsandboxed.
   - Auth: `bkt auth status` to check, `bkt auth login https://my.company.local` to (re)authenticate.
 - Check more at https://github.com/avivsinai/bitbucket-cli
+
+## 015 speclite-roadmap skill
+Skill for shaping the roadmap itself: investigate an idea (research, clarifying questions, overlaps, scope splits), add well-formed items, refine the backlog. Writes findings to `research/`. No ceremony by default — commits straight to trunk, with defensive checks and a `rules.md` opt-out. Never run by the loop. Notes: `research/roadmap-skill.md`.
+
+## 016 CI — installer dry-run + markdown lint
+GitHub Actions on push + PR: `bin/install.js` dry-run for all targets, markdown lint. README badge. Cheap safety net before the installer grows. Background: `research/opensource.md`.
+
+## 017 loop mode everywhere — one brain, driver loop, Codex + OpenCode
+Extract the continue/stop decision into one script, make the Stop hook a thin adapter, add a headless driver loop for platforms without a Stop hook. Build a reusable skills-dir installer target and use it to add Codex and OpenCode. Verify live on both. Research + design notes: `research/platforms.md`.
+
+## 018 Kiro support
+Add a `kiro` target on the 017 helper plus Kiro's native Stop-hook loop (CLI 3.0, v3 engine). Verify live. Research, installer layout, and known gaps: `research/kiro.md`.
