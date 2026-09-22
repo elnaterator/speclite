@@ -1,0 +1,16 @@
+{
+  "description": "Codex Stop hook for speclite loop modes. Same loop brain as hooks/hooks.json; Codex expands ${PLUGIN_ROOT} rather than ${CLAUDE_PLUGIN_ROOT}, and it feeds a blocked Stop hook's `reason` back as the next prompt (it does not accept additionalContext on Stop).",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${PLUGIN_ROOT}\"/hooks/mode-stop-codex.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

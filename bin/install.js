@@ -400,6 +400,160 @@ function uninstallCursor(ctx) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Agent Skills targets (platforms that read a plain skills directory)
+// ---------------------------------------------------------------------------
+
+// Codex, OpenCode (and later Kiro) all adopted the Agent Skills standard: a skill is a
+// directory containing SKILL.md. Installing means copying each skills/* subdir into the
+// platform's skills dir; uninstalling removes exactly those subdirs and nothing else
+// (other tools' skills live in the same dir).
+//
+// templates/ is deliberately not shipped: these platforms have no CLAUDE_PLUGIN_ROOT, so
+// speclite-init falls back to its inline templates.
+function skillNames(repoRoot) {
+  const src = path.join(repoRoot, "skills");
+  if (!fs.existsSync(src)) return [];
+  return fs
+    .readdirSync(src, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && fs.existsSync(path.join(src, e.name, "SKILL.md")))
+    .map((e) => e.name)
+    .sort();
+}
+
+// Build a TARGETS entry for an Agent-Skills platform.
+//   dir(): absolute path to the platform's skills directory
+//   cmd:   host CLI name, checked on a real install (a dry-run only warns, matching
+//          installClaude/installCopilot — CI previews on machines with no host CLI)
+function skillsDirTarget({ id, name, label, cmd, dir, detect, extras }) {
+  return {
+    id,
+    label,
+    detect,
+    install(ctx) {
+      if (cmd && !hasCmd(cmd)) {
+        if (!ctx.dry) {
+          fail(`${cmd} CLI not found — install ${name} and ensure \`${cmd}\` is on PATH`);
+        }
+        warn(`  [dry-run] ${cmd} CLI not found — preview only`);
+      }
+      const dest = dir();
+      const names = skillNames(ctx.repoRoot);
+      if (!names.length) fail(`no skills found under ${path.join(ctx.repoRoot, "skills")}`);
+      log(`  Installing ${names.length} skills → ${dest}`);
+      if (!ctx.dry) fs.mkdirSync(dest, { recursive: true });
+      for (const name of names) {
+        const target = path.join(dest, name);
+        rmDir(target, ctx);
+        copyDir(path.join(ctx.repoRoot, "skills", name), target, ctx, null);
+        log(`    ${name}`);
+      }
+      if (extras) {
+        const pluginSrc = path.join(ctx.repoRoot, extras.pluginFile);
+        const pluginDest = path.join(extras.pluginDir(), path.basename(extras.pluginFile));
+        log(`  Installing loop plugin → ${pluginDest}`);
+        if (!ctx.dry) {
+          fs.mkdirSync(extras.pluginDir(), { recursive: true });
+          fs.copyFileSync(pluginSrc, pluginDest);
+        }
+        // The plugin shells out to the loop brain. Keep hooks/ OUT of the plugins dir —
+        // the host loads every module it finds there — so park it in a sibling dir.
+        const brainDest = path.join(extras.supportDir(), "hooks");
+        log(`  Installing loop brain → ${brainDest}`);
+        rmDir(brainDest, ctx);
+        copyDir(path.join(ctx.repoRoot, "hooks"), brainDest, ctx, null);
+      }
+      log(`  Restart ${name} to pick up the skills.`);
+      if (extras) {
+        log("  Loop mode: the bundled plugin re-prompts on session.idle in interactive");
+        log("  sessions; for headless runs use bin/loop.sh.");
+      } else {
+        log("  Loop mode: this platform has no blocking Stop hook — drive it with bin/loop.sh.");
+      }
+    },
+    uninstall(ctx) {
+      const dest = dir();
+      let removed = 0;
+      for (const name of skillNames(ctx.repoRoot)) {
+        if (rmDir(path.join(dest, name), ctx)) removed++;
+      }
+      if (removed) {
+        log(`  Removed ${removed} speclite skills from ${dest}`);
+      } else {
+        log(`  Nothing to remove at ${dest}`);
+      }
+      if (extras) {
+        const pluginDest = path.join(extras.pluginDir(), path.basename(extras.pluginFile));
+        if (fs.existsSync(pluginDest)) {
+          if (!ctx.dry) fs.rmSync(pluginDest, { force: true });
+          log(`  Removed ${pluginDest}`);
+        }
+        if (rmDir(path.join(extras.supportDir(), "hooks"), ctx)) {
+          log(`  Removed loop brain from ${extras.supportDir()}`);
+        }
+      }
+    },
+  };
+}
+
+const OPENCODE_DIR = () => path.join(os.homedir(), ".config", "opencode");
+const OPENCODE_SKILLS_DIR = () => path.join(OPENCODE_DIR(), "skills");
+const OPENCODE_PLUGINS_DIR = () => path.join(OPENCODE_DIR(), "plugins");
+const OPENCODE_SUPPORT_DIR = () => path.join(OPENCODE_DIR(), "speclite");
+
+// Codex installs speclite as a real plugin (skills + Stop hook in one), the same shape the
+// desktop app reads — a bare skills dir is CLI-only and does not carry hooks.
+function codexMarketplaceRegistered() {
+  const listed = spawnSync("codex", ["plugin", "marketplace", "list"], { encoding: "utf8" });
+  return Boolean(listed.stdout && listed.stdout.includes(MARKETPLACE));
+}
+
+// speclite <= 0.3.0 installed Codex support by copying skills/* into ~/.codex/skills/.
+// That location still works, so an upgrade would leave every skill defined twice — once
+// there, once inside the plugin. Clear the old copies on both install and uninstall.
+const CODEX_LEGACY_SKILLS_DIR = () => path.join(os.homedir(), ".codex", "skills");
+
+function pruneLegacyCodexSkills(ctx) {
+  const dir = CODEX_LEGACY_SKILLS_DIR();
+  let removed = 0;
+  for (const name of skillNames(ctx.repoRoot)) {
+    if (rmDir(path.join(dir, name), ctx)) removed++;
+  }
+  if (removed) {
+    log(`  Removed ${removed} skills from the pre-plugin location ${dir}`);
+  }
+}
+
+function installCodex(ctx) {
+  if (!hasCmd("codex")) {
+    if (!ctx.dry) {
+      fail("codex CLI not found — install Codex CLI and ensure `codex` is on PATH");
+    }
+    warn("  [dry-run] codex CLI not found — preview only");
+  }
+  if (ctx.dry || !codexMarketplaceRegistered()) {
+    runSpawn("codex", ["plugin", "marketplace", "add", ctx.source], ctx);
+  }
+  runSpawn("codex", ["plugin", "remove", `${PLUGIN_NAME}@${MARKETPLACE}`], ctx, {
+    ignoreFailure: true,
+  });
+  runSpawn("codex", ["plugin", "add", `${PLUGIN_NAME}@${MARKETPLACE}`], ctx);
+  pruneLegacyCodexSkills(ctx);
+  log("  Restart Codex to pick up the skills.");
+  log("  Loop mode: trust the speclite Stop hook once (`/hooks`) before it will run;");
+  log("  headless runs need `codex exec --dangerously-bypass-hook-trust`.");
+}
+
+function uninstallCodex(ctx) {
+  runSpawn("codex", ["plugin", "remove", `${PLUGIN_NAME}@${MARKETPLACE}`], ctx, {
+    ignoreFailure: true,
+  });
+  runSpawn("codex", ["plugin", "marketplace", "remove", MARKETPLACE], ctx, {
+    ignoreFailure: true,
+  });
+  pruneLegacyCodexSkills(ctx);
+}
+
 const TARGETS = [
   {
     id: "claude",
@@ -422,6 +576,28 @@ const TARGETS = [
     install: installCursor,
     uninstall: uninstallCursor,
   },
+  {
+    id: "codex",
+    label: "Codex CLI + desktop app (plugin: skills + Stop hook)",
+    detect: () => hasCmd("codex") || fs.existsSync(path.join(os.homedir(), ".codex")),
+    install: installCodex,
+    uninstall: uninstallCodex,
+  },
+  skillsDirTarget({
+    id: "opencode",
+    name: "OpenCode",
+    label: "OpenCode (skills dir + loop plugin)",
+    cmd: "opencode",
+    dir: OPENCODE_SKILLS_DIR,
+    extras: {
+      pluginFile: path.join("plugins", "opencode", "speclite-loop.js"),
+      pluginDir: OPENCODE_PLUGINS_DIR,
+      supportDir: OPENCODE_SUPPORT_DIR,
+    },
+    detect: () =>
+      hasCmd("opencode") ||
+      fs.existsSync(path.join(os.homedir(), ".config", "opencode")),
+  }),
 ];
 
 function targetById(id) {

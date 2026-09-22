@@ -1,0 +1,34 @@
+{
+  "name": "speclite",
+  "version": "0.3.0",
+  "description": "Lightweight spec-driven development for Claude Code, GitHub Copilot (CLI + VS Code), Cursor, Codex CLI, and OpenCode. Roadmap + per-item plans + git-branch-per-item workflow. Skills for init, plan, build, review, ship, plus optional loop modes (run dispatcher + Stop hook).",
+  "author": {
+    "name": "Nathan Hadzariga"
+  },
+  "license": "MIT",
+  "keywords": [
+    "spec-driven",
+    "workflow",
+    "roadmap",
+    "planning",
+    "git"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.codex.json",
+  "interface": {
+    "displayName": "speclite",
+    "shortDescription": "Roadmap-driven spec workflow: plan, build, review, ship",
+    "longDescription": "Lightweight spec-driven development. One roadmap item = one plan = one git branch. Skills for init, plan, build, review, and ship, plus optional loop modes that chain them and halt at deliberate gates.",
+    "developerName": "Nathan Hadzariga",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Initialize this repo for the speclite workflow",
+      "Plan the next roadmap item",
+      "What is the next step in the speclite pipeline?"
+    ]
+  }
+}
