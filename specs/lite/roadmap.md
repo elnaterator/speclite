@@ -101,7 +101,7 @@ Skill for shaping the roadmap itself: investigate an idea (research, clarifying 
 
 GitHub Actions on push + PR: `bin/install.js` dry-run for all targets, markdown lint. README badge. Cheap safety net before the installer grows. Background: `research/opensource.md`.
 
-## 017 loop mode everywhere — one brain, native loops on Codex + OpenCode - BUILT
+## 017 loop mode everywhere — one brain, native loops on Codex + OpenCode - SHIPPED
 
 Extract the continue/stop decision into one brain script and make every loop driver a thin adapter over it: the Claude-format Stop hook, a Codex-dialect Stop hook, an OpenCode `session.idle` plugin, and a headless driver loop for anything else. Ship Codex as a real plugin (skills + Stop hook, CLI and desktop app) and OpenCode as skills dir + loop plugin. Research + live findings: `research/platforms.md`.
 
