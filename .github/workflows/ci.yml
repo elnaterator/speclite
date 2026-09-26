@@ -31,7 +31,7 @@ jobs:
       # warns instead of failing when its CLI is absent.
       - name: Install dry-run (each target)
         run: |
-          for target in claude copilot cursor; do
+          for target in claude copilot cursor codex opencode; do
             echo "::group::install --only $target --dry-run"
             node bin/install.js --only "$target" --dry-run
             echo "::endgroup::"
@@ -39,7 +39,7 @@ jobs:
 
       - name: Uninstall dry-run (each target)
         run: |
-          for target in claude copilot cursor; do
+          for target in claude copilot cursor codex opencode; do
             echo "::group::uninstall --only $target --dry-run"
             node bin/install.js --only "$target" --uninstall --dry-run
             echo "::endgroup::"

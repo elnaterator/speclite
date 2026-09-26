@@ -6,7 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-speclite = **tri-platform plugin** (Claude Code + GitHub Copilot [CLI + VS Code] + Cursor; no binary, no build step). Lightweight spec-driven development. Product = skills in markdown — each `skills/*/SKILL.md` is deliverable. No compile/lint/test toolchain. "Test" a change = install plugin, run skills in target repo. Manifests: `.claude-plugin/plugin.json` + `marketplace.json` (shared Claude-format, also read by Copilot CLI + VS Code) and `.cursor-plugin/plugin.json` (Cursor); skills/hooks/templates shared. One cross-platform installer: `bin/install.js` (pure Node, zero deps).
+speclite = **multi-platform plugin** (Claude Code + GitHub Copilot [CLI + VS Code] + Cursor +
+Codex CLI/desktop as a plugin; OpenCode as skills dir + loop plugin; no binary, no build step). Lightweight spec-driven development. Product = skills in markdown — each `skills/*/SKILL.md` is deliverable. No compile/lint/test toolchain. "Test" a change = install plugin, run skills in target repo. Manifests: `.claude-plugin/plugin.json` + `marketplace.json` (shared Claude-format, also read by Copilot CLI + VS Code) and `.cursor-plugin/plugin.json` (Cursor); skills/hooks/templates shared. One cross-platform installer: `bin/install.js` (pure Node, zero deps). Loop brain lives in
+`hooks/loop-check.sh`; every driver is a thin adapter over it — `hooks/mode-stop.sh`
+(Claude-format), `hooks/mode-stop-codex.sh` + `hooks/hooks.codex.json` (Codex: `reason` only,
+`${PLUGIN_ROOT}`), `plugins/opencode/speclite-loop.js` (OpenCode `session.idle` re-prompt),
+and `bin/loop.sh` (headless fallback).
 
 ## The workflow it implements
 

@@ -43,15 +43,16 @@ pushed, PR open. Default is 1 roadmap item =
 
 ## Install
 
-speclite is a single plugin for **Claude Code**, **GitHub Copilot** (CLI + VS Code), and
-**Cursor**. One cross-platform installer ([`bin/install.js`](./bin/install.js), pure Node, zero
-deps) handles every target — no clone needed:
+speclite runs as a plugin on **Claude Code**, **GitHub Copilot** (CLI + VS Code), and
+**Cursor**, and as a plain Agent Skills directory on **Codex CLI** and **OpenCode**. One
+cross-platform installer ([`bin/install.js`](./bin/install.js), pure Node, zero deps) handles
+every target — no clone needed:
 
 ```bash
 # install for every agent detected on your machine:
 npx -y github:elnaterator/speclite -- --all
 
-# or a single agent (claude | copilot | cursor):
+# or a single agent (claude | copilot | cursor | codex | opencode):
 npx -y github:elnaterator/speclite -- --only copilot
 ```
 
@@ -86,8 +87,27 @@ mode with `/speclite-mode` (stored in `specs/lite/.mode`):
 
 - `speclite-run` is a pure **state-machine dispatcher** over the roadmap status plus git
   state. Each run advances the pipeline by one step or **halts**.
-- A bundled **Stop hook** (`hooks/mode-stop.sh`) re-triggers `speclite-run` after each
-  step while the mode is `semi-auto`/`full-auto` and no halt marker is set.
+- One brain decides whether to keep going: `hooks/loop-check.sh` reads `.mode` + `.halt` and
+  exits 0 (continue) or 1 (stop, printing the reason). Every driver is a thin wrapper over it.
+- On platforms with a blocking Stop hook (Claude Code, Copilot, Cursor), the bundled
+  `hooks/mode-stop.sh` calls that brain and re-triggers `speclite-run` after each step.
+- **Codex** gets the same thing in its own dialect: speclite installs as a Codex plugin and
+  registers `hooks/mode-stop-codex.sh`, which emits `reason` only (Codex rejects a Stop
+  payload carrying `additionalContext`, and turns `reason` into the next prompt). Trust the
+  hook once via `/hooks` before it will run.
+- **OpenCode** has no stop hook, but its plugin API does: `plugins/opencode/speclite-loop.js`
+  watches `session.idle` and re-prompts the session through the SDK client. Interactive only.
+- Anywhere hook-less or headless, drive the same loop from the shell with
+  [`bin/loop.sh`](./bin/loop.sh) — a fresh session per iteration, which is safe because
+  `speclite-run` is stateless:
+
+  ```bash
+  bin/loop.sh --agent "codex exec"      # or: --agent "opencode run"
+  ```
+
+  It is do-while on purpose: the first iteration runs unconditionally (setting a mode writes
+  `.halt`, so the loop never self-starts), then the brain decides each subsequent one.
+  `--max-iterations` caps a runaway loop.
 - **semi-auto** never commits, pushes, or opens a PR — it halts at the pre-commit gate (item
   `BUILT`); you run `/speclite-ship`. **full-auto** crosses that gate: `speclite-run`
   dispatches `/speclite-ship` at `BUILT` and halts after the PR is opened (it never merges).

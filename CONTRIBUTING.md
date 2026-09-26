@@ -1,6 +1,7 @@
 # Contributing to speclite
 
-speclite is a **tri-platform plugin** (Claude Code + GitHub Copilot + Cursor) with no binary
+speclite is a **multi-platform plugin** (Claude Code + GitHub Copilot + Cursor, plus Codex CLI
+and OpenCode via a plain skills directory) with no binary
 and no build step. The product is the skills themselves — each `skills/*/SKILL.md` is a
 deliverable. There is no compile/lint/test toolchain; "testing" a change means installing the
 plugin and running the skills against a target repo.
