@@ -289,7 +289,18 @@ function installClaude(ctx) {
   if (!registered) {
     runSpawn("claude", ["plugin", "marketplace", "add", ctx.source], ctx);
   }
-  runSpawn("claude", ["plugin", "marketplace", "update", MARKETPLACE], ctx);
+  const updated = runSpawn("claude", ["plugin", "marketplace", "update", MARKETPLACE], ctx, {
+    ignoreFailure: true,
+  });
+  if (updated.status !== 0) {
+    // Registered marketplace is stale (e.g. points at a moved/deleted dir).
+    // Re-register against the current source.
+    warn("  marketplace update failed — re-registering against current source");
+    runSpawn("claude", ["plugin", "marketplace", "remove", MARKETPLACE], ctx, {
+      ignoreFailure: true,
+    });
+    runSpawn("claude", ["plugin", "marketplace", "add", ctx.source], ctx);
+  }
   runSpawn("claude", ["plugin", "uninstall", `${PLUGIN_NAME}@${MARKETPLACE}`], ctx, {
     ignoreFailure: true,
   });
