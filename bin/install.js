@@ -325,13 +325,18 @@ function installCopilot(ctx) {
   if (hasCmd("copilot")) {
     // Primary path: install into the shared ~/.copilot/installed-plugins/
     // location, which VS Code Copilot also auto-discovers.
+    // Always re-register: an existing entry may point at a moved/deleted
+    // source dir, which makes `plugin install` fail.
     const listed = ctx.dry
       ? {}
       : spawnSync("copilot", ["plugin", "marketplace", "list"], { encoding: "utf8" });
     const registered = listed.stdout && listed.stdout.includes(MARKETPLACE);
-    if (!registered) {
-      runSpawn("copilot", ["plugin", "marketplace", "add", ctx.source], ctx);
+    if (registered) {
+      runSpawn("copilot", ["plugin", "marketplace", "remove", MARKETPLACE], ctx, {
+        ignoreFailure: true,
+      });
     }
+    runSpawn("copilot", ["plugin", "marketplace", "add", ctx.source], ctx);
     runSpawn("copilot", ["plugin", "uninstall", `${PLUGIN_NAME}@${MARKETPLACE}`], ctx, {
       ignoreFailure: true,
     });
