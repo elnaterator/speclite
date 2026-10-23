@@ -4,6 +4,29 @@ Backs roadmap item 018. Researched Sep 2026 against kiro-cli 2.21.1 docs; re-che
 against docs updated 2026-10-10 and changelog through CLI 2.28.0 / IDE 1.2.56. Still not
 live-verified.
 
+## Oct 2026 build (018) — local findings, kiro-cli 2.33.1
+
+- Hook file schema confirmed from docs: `{"version":"v1","hooks":[{name, trigger:"Stop",
+  action:{type:"command", command}}]}`; optional `description`, `timeout` (s, default 60),
+  `enabled`, `confirm`. Global `~/.kiro/hooks/` is loaded by CLI V3 only.
+- 2.33.1 still defaults to V2: `--agent-engine` lists `v2 (default)`; `--v3` launches V3.
+- Installer writes `~/.kiro/hooks/speclite-stop.json` → absolute
+  `~/.kiro/speclite/hooks/mode-stop-kiro.sh`.
+- **Verified live (headless `kiro-cli chat --v3 --no-interactive --trust-all-tools`):**
+  - Global `~/.kiro/hooks/*.json` load; `Stop` fires with stdin
+    `{"session_id","hook_event_name":"Stop","cwd"}`; `UserPromptSubmit` also gets `prompt`.
+  - `{"decision":"block","reason":"…"}` continues the turn with `reason` as the next prompt
+    — compact or pretty-printed JSON both work, headless included.
+  - The **same reply plus `hookSpecificOutput` is silently ignored** (no continue, no
+    error). So `mode-stop.sh` cannot be reused; `hooks/mode-stop-kiro.sh` execs the
+    `reason`-only `mode-stop-codex.sh`.
+  - Full loop: `.mode` = semi-auto, no `.halt` → hook blocked, agent continued, wrote
+    `.halt`, next Stop allowed. With `.halt` present → single turn, stops.
+  - Skills: default agent lists all 9 `speclite-*`; `/speclite-init` as prompt text runs the
+    skill end-to-end (inline template fallback).
+- Headless `kiro-cli chat --v3 --no-interactive` with no login hangs silently (no error, no
+  exit) — not a usable failure mode for `bin/loop.sh`; log in first. Logged in, headless works.
+
 ## Oct 2026 re-check — item still holds
 
 - CLI V3 `Stop` continue is now documented two ways (hooks-migration page): exit code **1**,

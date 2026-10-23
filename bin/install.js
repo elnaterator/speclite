@@ -10,7 +10,7 @@
  *
  * Usage:
  *   node bin/install.js [flags]
- *     --only <id>     claude | copilot | cursor (repeatable)
+ *     --only <id>     claude | copilot | cursor | codex | opencode | kiro (repeatable)
  *     --all           install all detected targets
  *     --source <src>  owner/repo | local path | git URL (auto-detected when omitted)
  *     --dry-run       print actions, write nothing
@@ -465,28 +465,12 @@ function skillsDirTarget({ id, name, label, cmd, dir, detect, extras }) {
         copyDir(path.join(ctx.repoRoot, "skills", name), target, ctx, null);
         log(`    ${name}`);
       }
-      if (extras) {
-        const pluginSrc = path.join(ctx.repoRoot, extras.pluginFile);
-        const pluginDest = path.join(extras.pluginDir(), path.basename(extras.pluginFile));
-        log(`  Installing loop plugin → ${pluginDest}`);
-        if (!ctx.dry) {
-          fs.mkdirSync(extras.pluginDir(), { recursive: true });
-          fs.copyFileSync(pluginSrc, pluginDest);
-        }
-        // The plugin shells out to the loop brain. Keep hooks/ OUT of the plugins dir —
-        // the host loads every module it finds there — so park it in a sibling dir.
-        const brainDest = path.join(extras.supportDir(), "hooks");
-        log(`  Installing loop brain → ${brainDest}`);
-        rmDir(brainDest, ctx);
-        copyDir(path.join(ctx.repoRoot, "hooks"), brainDest, ctx, null);
-      }
+      if (extras) extras.install(ctx);
       log(`  Restart ${name} to pick up the skills.`);
-      if (extras) {
-        log("  Loop mode: the bundled plugin re-prompts on session.idle in interactive");
-        log("  sessions; for headless runs use bin/loop.sh.");
-      } else {
-        log("  Loop mode: this platform has no blocking Stop hook — drive it with bin/loop.sh.");
-      }
+      const note = extras && extras.loopNote
+        ? extras.loopNote
+        : ["Loop mode: this platform has no blocking Stop hook — drive it with bin/loop.sh."];
+      for (const line of note) log(`  ${line}`);
     },
     uninstall(ctx) {
       const dest = dir();
@@ -499,24 +483,105 @@ function skillsDirTarget({ id, name, label, cmd, dir, detect, extras }) {
       } else {
         log(`  Nothing to remove at ${dest}`);
       }
-      if (extras) {
-        const pluginDest = path.join(extras.pluginDir(), path.basename(extras.pluginFile));
-        if (fs.existsSync(pluginDest)) {
-          if (!ctx.dry) fs.rmSync(pluginDest, { force: true });
-          log(`  Removed ${pluginDest}`);
-        }
-        if (rmDir(path.join(extras.supportDir(), "hooks"), ctx)) {
-          log(`  Removed loop brain from ${extras.supportDir()}`);
-        }
-      }
+      if (extras) extras.uninstall(ctx);
     },
   };
+}
+
+// Copy hooks/ (loop brain + adapters) into <supportDir>/hooks — kept out of any dir the
+// host scans for modules or hook definitions.
+function installLoopBrain(supportDir, ctx) {
+  const brainDest = path.join(supportDir, "hooks");
+  log(`  Installing loop brain → ${brainDest}`);
+  rmDir(brainDest, ctx);
+  copyDir(path.join(ctx.repoRoot, "hooks"), brainDest, ctx, null);
+  return brainDest;
+}
+
+function uninstallLoopBrain(supportDir, ctx) {
+  if (rmDir(path.join(supportDir, "hooks"), ctx)) {
+    log(`  Removed loop brain from ${supportDir}`);
+  }
+  // supportDir is speclite's own; drop it once empty so uninstall leaves no trace.
+  if (!ctx.dry && fs.existsSync(supportDir) && !fs.readdirSync(supportDir).length) {
+    fs.rmdirSync(supportDir);
+  }
+}
+
+function removeFile(file, ctx) {
+  if (!fs.existsSync(file)) return;
+  if (!ctx.dry) fs.rmSync(file, { force: true });
+  log(`  Removed ${file}`);
 }
 
 const OPENCODE_DIR = () => path.join(os.homedir(), ".config", "opencode");
 const OPENCODE_SKILLS_DIR = () => path.join(OPENCODE_DIR(), "skills");
 const OPENCODE_PLUGINS_DIR = () => path.join(OPENCODE_DIR(), "plugins");
 const OPENCODE_SUPPORT_DIR = () => path.join(OPENCODE_DIR(), "speclite");
+const OPENCODE_PLUGIN_FILE = path.join("plugins", "opencode", "speclite-loop.js");
+const OPENCODE_PLUGIN_DEST = () =>
+  path.join(OPENCODE_PLUGINS_DIR(), path.basename(OPENCODE_PLUGIN_FILE));
+
+// OpenCode loop: a session.idle plugin that shells out to the brain. The brain goes in a
+// sibling dir because OpenCode loads every module it finds in the plugins dir.
+const OPENCODE_EXTRAS = {
+  install(ctx) {
+    const pluginDest = OPENCODE_PLUGIN_DEST();
+    log(`  Installing loop plugin → ${pluginDest}`);
+    if (!ctx.dry) {
+      fs.mkdirSync(OPENCODE_PLUGINS_DIR(), { recursive: true });
+      fs.copyFileSync(path.join(ctx.repoRoot, OPENCODE_PLUGIN_FILE), pluginDest);
+    }
+    installLoopBrain(OPENCODE_SUPPORT_DIR(), ctx);
+  },
+  uninstall(ctx) {
+    removeFile(OPENCODE_PLUGIN_DEST(), ctx);
+    uninstallLoopBrain(OPENCODE_SUPPORT_DIR(), ctx);
+  },
+  loopNote: [
+    "Loop mode: the bundled plugin re-prompts on session.idle in interactive",
+    "sessions; for headless runs use bin/loop.sh.",
+  ],
+};
+
+// Kiro (CLI V3) reads standalone hook files from ~/.kiro/hooks/*.json and honors a Stop
+// block reply carrying `decision` + `reason` only (mode-stop-kiro.sh). It does not expand
+// ${CLAUDE_PLUGIN_ROOT}, so the hook command is the absolute path of the installed adapter.
+const KIRO_DIR = () => path.join(os.homedir(), ".kiro");
+const KIRO_SKILLS_DIR = () => path.join(KIRO_DIR(), "skills");
+const KIRO_SUPPORT_DIR = () => path.join(KIRO_DIR(), "speclite");
+const KIRO_HOOK_FILE = () => path.join(KIRO_DIR(), "hooks", "speclite-stop.json");
+
+const KIRO_EXTRAS = {
+  install(ctx) {
+    const brainDest = installLoopBrain(KIRO_SUPPORT_DIR(), ctx);
+    const hookFile = KIRO_HOOK_FILE();
+    log(`  Installing Stop hook → ${hookFile}`);
+    writeJson(
+      hookFile,
+      {
+        version: "v1",
+        hooks: [
+          {
+            name: "speclite-loop",
+            description: "speclite loop mode: continue the pipeline while a loop mode is on",
+            trigger: "Stop",
+            action: { type: "command", command: path.join(brainDest, "mode-stop-kiro.sh") },
+          },
+        ],
+      },
+      ctx
+    );
+  },
+  uninstall(ctx) {
+    removeFile(KIRO_HOOK_FILE(), ctx);
+    uninstallLoopBrain(KIRO_SUPPORT_DIR(), ctx);
+  },
+  loopNote: [
+    "Loop mode: the Stop hook needs the V3 engine — run `kiro-cli chat --v3`",
+    "(or save 3.0 as default). Kiro IDE cannot block Stop; use bin/loop.sh there.",
+  ],
+};
 
 // Codex installs speclite as a real plugin (skills + Stop hook in one), the same shape the
 // desktop app reads — a bare skills dir is CLI-only and does not carry hooks.
@@ -606,14 +671,19 @@ const TARGETS = [
     label: "OpenCode (skills dir + loop plugin)",
     cmd: "opencode",
     dir: OPENCODE_SKILLS_DIR,
-    extras: {
-      pluginFile: path.join("plugins", "opencode", "speclite-loop.js"),
-      pluginDir: OPENCODE_PLUGINS_DIR,
-      supportDir: OPENCODE_SUPPORT_DIR,
-    },
+    extras: OPENCODE_EXTRAS,
     detect: () =>
       hasCmd("opencode") ||
       fs.existsSync(path.join(os.homedir(), ".config", "opencode")),
+  }),
+  skillsDirTarget({
+    id: "kiro",
+    name: "Kiro",
+    label: "Kiro CLI (skills dir + V3 Stop hook)",
+    cmd: "kiro-cli",
+    dir: KIRO_SKILLS_DIR,
+    extras: KIRO_EXTRAS,
+    detect: () => hasCmd("kiro-cli") || fs.existsSync(KIRO_DIR()),
   }),
 ];
 

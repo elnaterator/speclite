@@ -44,7 +44,8 @@ pushed, PR open. Default is 1 roadmap item =
 ## Install
 
 speclite runs as a plugin on **Claude Code**, **GitHub Copilot** (CLI + VS Code), and
-**Cursor**, and as a plain Agent Skills directory on **Codex CLI** and **OpenCode**. One
+**Cursor**, as a Codex plugin, and as an Agent Skills directory on **OpenCode** and **Kiro
+CLI**. One
 cross-platform installer ([`bin/install.js`](./bin/install.js), pure Node, zero deps) handles
 every target — no clone needed:
 
@@ -52,7 +53,7 @@ every target — no clone needed:
 # install for every agent detected on your machine:
 npx -y github:elnaterator/speclite -- --all
 
-# or a single agent (claude | copilot | cursor | codex | opencode):
+# or a single agent (claude | copilot | cursor | codex | opencode | kiro):
 npx -y github:elnaterator/speclite -- --only copilot
 ```
 
@@ -97,6 +98,10 @@ mode with `/speclite-mode` (stored in `specs/lite/.mode`):
   hook once via `/hooks` before it will run.
 - **OpenCode** has no stop hook, but its plugin API does: `plugins/opencode/speclite-loop.js`
   watches `session.idle` and re-prompts the session through the SDK client. Interactive only.
+- **Kiro CLI** (V3 engine) honors a Stop block reply, so the installer copies
+  `hooks/` to `~/.kiro/speclite/hooks/` and registers `mode-stop-kiro.sh` (`reason` only, like
+  Codex — Kiro ignores a block carrying `hookSpecificOutput`) by absolute path in
+  `~/.kiro/hooks/speclite-stop.json`. Run `kiro-cli chat --v3`; Kiro IDE cannot block Stop.
 - Anywhere hook-less or headless, drive the same loop from the shell with
   [`bin/loop.sh`](./bin/loop.sh) — a fresh session per iteration, which is safe because
   `speclite-run` is stateless:

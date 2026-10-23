@@ -9,7 +9,8 @@
 #
 # The "run /speclite-run now" instruction goes in BOTH `reason` and `additionalContext`:
 # Claude Code / Copilot / Cursor read `additionalContext`, but platforms that only surface
-# `reason` (e.g. Kiro) still need the instruction to reach the agent.
+# `reason` still need the instruction to reach the agent. (Kiro and Codex reject the extra
+# `hookSpecificOutput` key entirely — they use the `reason`-only mode-stop-codex.sh.)
 #
 # Pure bash, no dependencies.
 
