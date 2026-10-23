@@ -108,3 +108,7 @@ Extract the continue/stop decision into one brain script and make every loop dri
 ## 018 Kiro support
 
 Add a `kiro` target on the 017 helper plus Kiro's native Stop-hook loop (CLI 3.0, v3 engine). Verify live. Research, installer layout, and known gaps: `research/kiro.md`.
+
+## 019 Combine rules, overview and mode into speclite.md file
+
+Replace rules.md with speclite.md which will have frontmatter yaml for configs/settings as well as rules (e.g. mode). It should have speclite name, description, and link to more docs (readme on github) in order for repos using speclite to know what it is and where to find more info and docs. Should be backwards compatible, init should upgrade existing projects, migrating to speclite.md file.
