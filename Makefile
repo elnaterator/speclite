@@ -1,13 +1,13 @@
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 INSTALL := node $(REPO_ROOT)/bin/install.js
 
-.PHONY: help install install-cursor install-claude install-copilot install-codex install-opencode uninstall list lint ci
+.PHONY: help install install-cursor install-claude install-copilot install-codex install-opencode install-kiro uninstall list lint ci
 .DEFAULT: help
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "; blue = sprintf("%c[34m", 27); reset = sprintf("%c[0m", 27)} {printf "  %s%-18s%s %s\n", blue, $$1, reset, $$2}'
 
-install: ## Install into all detected targets (claude/copilot/cursor/codex/opencode)
+install: ## Install into all detected targets (claude/copilot/cursor/codex/opencode/kiro)
 	@$(INSTALL) --all
 
 install-claude: ## Install/update speclite in Claude Code via local marketplace
@@ -25,6 +25,9 @@ install-codex: ## Install skills into the Codex CLI skills dir
 install-opencode: ## Install skills into the OpenCode skills dir
 	@$(INSTALL) --only opencode
 
+install-kiro: ## Install skills + V3 Stop hook for Kiro CLI
+	@$(INSTALL) --only kiro
+
 uninstall: ## Uninstall from all selected/detected targets
 	@$(INSTALL) --all --uninstall
 
@@ -36,7 +39,7 @@ lint: ## Lint all markdown (same check CI runs)
 
 ci: ## Run the full CI suite locally (installer dry-run + markdown lint)
 	@$(INSTALL) --list
-	@for t in claude copilot cursor codex opencode; do $(INSTALL) --only $$t --dry-run >/dev/null || exit 1; done
-	@for t in claude copilot cursor codex opencode; do $(INSTALL) --only $$t --uninstall --dry-run >/dev/null || exit 1; done
+	@for t in claude copilot cursor codex opencode kiro; do $(INSTALL) --only $$t --dry-run >/dev/null || exit 1; done
+	@for t in claude copilot cursor codex opencode kiro; do $(INSTALL) --only $$t --uninstall --dry-run >/dev/null || exit 1; done
 	@echo "installer dry-run OK"
 	@npx -y markdownlint-cli2@0.23.2

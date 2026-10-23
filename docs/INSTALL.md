@@ -1,7 +1,8 @@
 # Installing speclite
 
 speclite ships as a single plugin for **Claude Code**, **GitHub Copilot** (CLI + VS Code), and
-**Cursor**, and as a plain Agent Skills directory for **Codex CLI** and **OpenCode**. Skills,
+**Cursor**, as a plugin for **Codex**, and as an Agent Skills directory for **OpenCode** and
+**Kiro CLI**. Skills,
 hooks, and templates are shared. One cross-platform installer
 ([`bin/install.js`](../bin/install.js), pure Node, zero deps) drives every target.
 
@@ -19,11 +20,12 @@ npx -y github:elnaterator/speclite -- --only copilot --dry-run
 ```
 
 Targets: `--only claude`, `--only copilot`, `--only cursor`, `--only codex`,
-`--only opencode` (repeatable), or `--all`. Add `--uninstall` to remove, `--list` to see
+`--only opencode`, `--only kiro` (repeatable), or `--all`. Add `--uninstall` to remove, `--list` to see
 what's detected.
 
 > Cloned the repo? Use the Makefile: `make install-copilot`, `make install-cursor`,
-> `make install-claude`, `make install-codex`, `make install-opencode`, `make install` (all),
+> `make install-claude`, `make install-codex`, `make install-opencode`, `make install-kiro`,
+> `make install` (all),
 > or `make uninstall`.
 
 ## GitHub Copilot (CLI + VS Code)
@@ -109,18 +111,45 @@ so use the driver loop there:
 bin/loop.sh --agent "opencode run"
 ```
 
-`templates/` is not copied for either platform — neither sets `CLAUDE_PLUGIN_ROOT`, so
+## Kiro CLI
+
+Kiro reads Agent Skills natively and its V3 engine honors a Stop block reply, so it
+gets the skills directory plus a global Stop hook:
+
+```bash
+npx -y github:elnaterator/speclite -- --only kiro
+# or, from a clone: make install-kiro
+```
+
+- skills → `~/.kiro/skills/` (each auto-registers as a `/<name>` command)
+- loop brain + adapter → `~/.kiro/speclite/hooks/`
+- Stop hook → `~/.kiro/hooks/speclite-stop.json`, pointing at the installed
+  `mode-stop-kiro.sh` by **absolute** path (Kiro does not expand `${CLAUDE_PLUGIN_ROOT}`).
+  Like Codex, it replies with `decision` + `reason` only — Kiro silently ignores a block
+  that also carries `hookSpecificOutput`.
+
+Two things to know about the loop on Kiro:
+
+- **V3 engine only.** Global hooks and the Stop block reply need `kiro-cli chat --v3` (or 3.0
+  saved as default). The V2 engine's stop hook cannot continue a session.
+- **IDE has no loop.** Kiro IDE `Stop` hooks cannot block, so drive the IDE with
+  `bin/loop.sh`. `.halt` is the only brake on the CLI — Kiro has no iteration cap.
+
+Custom Kiro agents must opt in to skills with
+`resources: ["skill://~/.kiro/skills/*/SKILL.md"]`; the default agent loads them already.
+
+`templates/` is not copied for OpenCode or Kiro — neither sets `CLAUDE_PLUGIN_ROOT`, so
 `speclite-init` uses its inline template fallback.
 
 ## Compatibility
 
-| Feature | Claude Code | Copilot CLI | VS Code / Copilot | Cursor | Codex CLI | OpenCode |
-|---------|-------------|-------------|-------------------|--------|-----------|----------|
-| Skills (`skills/*/SKILL.md`) | ✓ | ✓ | ✓ (preview) | ✓ | ✓ | ✓ |
-| Loop driver | Stop hook | Stop hook | Stop hook (Claude-format) | Stop hook | Stop hook (Codex dialect) | plugin on `session.idle`, else `bin/loop.sh` |
-| Hook matchers | ✓ | ✓ | ignored | partial | n/a | n/a |
-| Install | `claude plugin install` | `copilot plugin install` | auto-discovers Copilot installs | local copy | `codex plugin add` | skills dir + plugin copy |
-| Preview flag | — | — | `chat.plugins.enabled` | — | — | — |
+| Feature | Claude Code | Copilot CLI | VS Code / Copilot | Cursor | Codex CLI | OpenCode | Kiro CLI |
+|---------|-------------|-------------|-------------------|--------|-----------|----------|----------|
+| Skills (`skills/*/SKILL.md`) | ✓ | ✓ | ✓ (preview) | ✓ | ✓ | ✓ | ✓ |
+| Loop driver | Stop hook | Stop hook | Stop hook (Claude-format) | Stop hook | Stop hook (Codex dialect) | plugin on `session.idle`, else `bin/loop.sh` | Stop hook (V3 engine), IDE: `bin/loop.sh` |
+| Hook matchers | ✓ | ✓ | ignored | partial | n/a | n/a | n/a |
+| Install | `claude plugin install` | `copilot plugin install` | auto-discovers Copilot installs | local copy | `codex plugin add` | skills dir + plugin copy | skills dir + global hook JSON |
+| Preview flag | — | — | `chat.plugins.enabled` | — | — | — | `--v3` |
 
 The same Claude-format manifest (`.claude-plugin/`) is detected by all four plugin tools — no
 fork.
