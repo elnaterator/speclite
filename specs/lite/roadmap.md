@@ -109,7 +109,7 @@ Extract the continue/stop decision into one brain script and make every loop dri
 
 Add a `kiro` target on the 017 helper plus Kiro's native Stop-hook loop (CLI 3.0, v3 engine). Verify live. Research, installer layout, and known gaps: `research/kiro.md`.
 
-## 019 Add specs/lite/README.md on init - BUILT
+## 019 Add specs/lite/README.md on init - SHIPPED
 
 `speclite-init` should create a `specs/lite/README.md` with a brief overview of what
 speclite is and a link to the repo (https://github.com/elnaterator/speclite). Gives any
