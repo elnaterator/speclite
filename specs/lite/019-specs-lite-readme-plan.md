@@ -14,8 +14,9 @@ briefly explains speclite and links to the upstream repo. `rules.md` and `.mode`
 unchanged.
 
 In scope:
+
 - Add `specs/lite/README.md` to the files `speclite-init` creates.
-- Content: one-paragraph description of speclite + link to https://github.com/elnaterator/speclite.
+- Content: one-paragraph description of speclite + link to <https://github.com/elnaterator/speclite>.
 - Idempotent: skip if the file already exists (same pattern as all other init-created files).
 - Update the inline fallback in `speclite-init`'s SKILL.md to include the README step.
 - Add a bundled template at `templates/specs-lite-readme.md` (parallel to `roadmap.md` and `plan-template.md`).
@@ -31,6 +32,7 @@ In scope:
 ## Design
 
 **Touches:**
+
 - `.kiro/skills/speclite-init/SKILL.md` (mod) — add step 7 (README creation) before the current step 7 report; renumber report to step 8.
 - `templates/specs-lite-readme.md` (new) — bundled template used by installers; inline fallback in the skill uses the same content.
 
@@ -57,6 +59,7 @@ More info and docs: https://github.com/elnaterator/speclite
 ## Testing
 
 Manual check:
+
 1. In a fresh repo (or temp dir), run `/speclite-init` and confirm `specs/lite/README.md` is created with the expected content.
 2. Run `/speclite-init` again and confirm the file is not overwritten.
 3. Confirm `templates/specs-lite-readme.md` exists.

@@ -112,6 +112,6 @@ Add a `kiro` target on the 017 helper plus Kiro's native Stop-hook loop (CLI 3.0
 ## 019 Add specs/lite/README.md on init - SHIPPED
 
 `speclite-init` should create a `specs/lite/README.md` with a brief overview of what
-speclite is and a link to the repo (https://github.com/elnaterator/speclite). Gives any
+speclite is and a link to the repo (<https://github.com/elnaterator/speclite>). Gives any
 contributor who browses `specs/lite/` immediate context on the tooling. `rules.md` and
 `.mode` are unchanged.
