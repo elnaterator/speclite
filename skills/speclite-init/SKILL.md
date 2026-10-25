@@ -153,7 +153,7 @@ existing roadmap or plan template.
    overwrite — it may hold per-project customization. Inline fallback content:
 
    ```markdown
-   # specs/lite
+   # speclite
 
    This directory contains the [speclite](https://github.com/elnaterator/speclite) spec-driven
    workflow files for this project: the roadmap, per-item plans, and project rules.
@@ -162,7 +162,16 @@ existing roadmap or plan template.
    roadmap → plan → build → review → ship pipeline, driven entirely by markdown files and
    AI agent skills.
 
-   More info and docs: https://github.com/elnaterator/speclite
+   Each work item moves through this lifecycle, tracked as the heading suffix in `roadmap.md`:
+
+       (backlog) → PLANNED → WIP → BUILT → SHIPPED
+
+   Key commands:
+
+       /speclite-plan    pick next item → branch → write a plan
+       /speclite-build   build the plan → mark BUILT
+       /speclite-ship    commit, push, open a PR
+       /speclite-run     dispatcher: run the right next skill automatically
    ```
 
 8. Report what was created vs already present (roadmap, plan template, rules, mode
