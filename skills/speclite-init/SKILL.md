@@ -148,8 +148,25 @@ existing roadmap or plan template.
    These transient files are the mode selector and halt signal (see `/speclite-mode`,
    `/speclite-run`). They are per-machine state, not part of the spec.
 
-7. Report what was created vs already present (roadmap, plan template, rules, mode
-   gitignore). Suggest next step: add items to the roadmap, then run `/speclite-plan`.
+7. Create `specs/lite/README.md` **only if it does not exist** (same copy/fallback
+   pattern, source `${CLAUDE_PLUGIN_ROOT}/templates/specs-lite-readme.md`). Never
+   overwrite — it may hold per-project customization. Inline fallback content:
+
+   ```markdown
+   # specs/lite
+
+   This directory contains the [speclite](https://github.com/elnaterator/speclite) spec-driven
+   workflow files for this project: the roadmap, per-item plans, and project rules.
+
+   **speclite** is a lightweight, AI-native planning workflow that structures work into a
+   roadmap → plan → build → review → ship pipeline, driven entirely by markdown files and
+   AI agent skills.
+
+   More info and docs: https://github.com/elnaterator/speclite
+   ```
+
+8. Report what was created vs already present (roadmap, plan template, rules, mode
+   gitignore, README). Suggest next step: add items to the roadmap, then run `/speclite-plan`.
 
 ## Boundaries
 
