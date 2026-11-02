@@ -1,6 +1,6 @@
 {
   "name": "speclite",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Lightweight spec-driven development for Claude Code, GitHub Copilot (CLI + VS Code), Cursor, Codex CLI, and OpenCode. Roadmap + per-item plans + git-branch-per-item workflow. Skills for init, plan, build, review, ship, plus optional loop modes (run dispatcher + Stop hook).",
   "author": {
     "name": "Nathan Hadzariga"

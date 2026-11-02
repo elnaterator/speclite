@@ -78,6 +78,11 @@ Repo layout: `.claude-plugin/` (shared Claude-format manifest + marketplace, rea
 `.github/workflows/ci.yml` runs on push to `main` and on every PR — two jobs, no repo
 dependencies (Node + `npx` only):
 
+- **version check** (first step of the installer job) — `node bin/version.js --check`
+  fails if any plugin manifest's `version` differs from `package.json`, the single version
+  source. Change versions only via `make bump V=x.y.z`; bump policy + tagging live in
+  `specs/lite/rules.md`.
+
 - **installer dry-run** — `--list`, then `--only <t> --dry-run` and
   `--only <t> --uninstall --dry-run` for each of `claude` / `copilot` / `cursor`.
   Do **not** switch this to `--all`: `--all` filters by `detect()` and fails with
@@ -95,7 +100,7 @@ dependencies (Node + `npx` only):
 Run the same checks locally:
 
 ```bash
-make ci      # installer dry-run + markdown lint
+make ci      # version check + installer dry-run + markdown lint
 make lint    # markdown lint only
 ```
 

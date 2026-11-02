@@ -1,7 +1,7 @@
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 INSTALL := node $(REPO_ROOT)/bin/install.js
 
-.PHONY: help install install-cursor install-claude install-copilot install-codex install-opencode install-kiro uninstall list lint ci
+.PHONY: help install install-cursor install-claude install-copilot install-codex install-opencode install-kiro uninstall list lint ci version bump tag
 .DEFAULT: help
 
 help: ## Show this help message
@@ -34,10 +34,21 @@ uninstall: ## Uninstall from all selected/detected targets
 list: ## List install targets and detection status
 	@$(INSTALL) --list
 
+version: ## Print the canonical version (package.json)
+	@node $(REPO_ROOT)/bin/version.js
+
+bump: ## Stamp V=x.y.z into package.json + every plugin manifest
+	@test -n "$(V)" || { echo "usage: make bump V=x.y.z"; exit 1; }
+	@node $(REPO_ROOT)/bin/version.js --set $(V)
+
+tag: ## Tag HEAD as v<version> (does not push)
+	@v=$$(node $(REPO_ROOT)/bin/version.js) && git tag "v$$v" && echo "tagged v$$v — push with: git push origin v$$v"
+
 lint: ## Lint all markdown (same check CI runs)
 	@npx -y markdownlint-cli2@0.23.2
 
-ci: ## Run the full CI suite locally (installer dry-run + markdown lint)
+ci: ## Run the full CI suite locally (version check + installer dry-run + markdown lint)
+	@node $(REPO_ROOT)/bin/version.js --check
 	@$(INSTALL) --list
 	@for t in claude copilot cursor codex opencode kiro; do $(INSTALL) --only $$t --dry-run >/dev/null || exit 1; done
 	@for t in claude copilot cursor codex opencode kiro; do $(INSTALL) --only $$t --uninstall --dry-run >/dev/null || exit 1; done
