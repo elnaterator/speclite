@@ -79,7 +79,17 @@ time as a daily check or to preview the loop before committing to a loop mode.
      `no such host` in a sandbox, add it to `sandbox.excludedCommands`; check auth with
      `bkt auth status`.)
 
-3. **Compute the next step as a dry-run.** Apply the `speclite-run` decision table to the
+3. **Read the installed speclite version** (local files only — no network). Take the first
+   that answers:
+
+   ```bash
+   cat "${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json" 2>/dev/null | grep -m1 '"version"'
+   cat "${SPECLITE_HOME:-$HOME/.speclite}/installs.json" 2>/dev/null | grep '"version"'
+   ```
+
+   Neither present ⇒ version `unknown`.
+
+4. **Compute the next step as a dry-run.** Apply the `speclite-run` decision table to the
    observed state and name the single action the dispatcher _would_ take — **do not run it**.
    This is a preview only. Match exactly one row:
    - `specs/lite/` missing → would run `speclite-init`.
@@ -91,12 +101,14 @@ time as a daily check or to preview the loop before committing to a loop mode.
    - Dirty tree (unrelated changes), off-trunk-when-expected, branch without `<NNN>`, or
      missing item for the branch → would halt and ask.
 
-4. **Report** a compact summary:
+5. **Report** a compact summary:
    - Roadmap items grouped by status with counts (backlog / PLANNED / WIP / BUILT / SHIPPED).
    - Current branch and the roadmap item it maps to (or "not tied to an item").
    - Mode, and the halt marker + reason if present.
    - Open PR (number/title/state/url) or "none".
-   - **Next:** the dry-run action from Step 3, labeled clearly as a preview (suggest running
+   - speclite version from Step 3, plus the hint: run
+     `npx -y github:elnaterator/speclite -- doctor` to check for stale or conflicting copies.
+   - **Next:** the dry-run action from Step 4, labeled clearly as a preview (suggest running
      `/speclite-run` to actually advance).
 
 ## Boundaries

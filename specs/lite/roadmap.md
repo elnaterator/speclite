@@ -122,7 +122,7 @@ One canonical version (`package.json`) stamped into every plugin manifest, CI ch
 drift, `vX.Y.Z` tags. Bump policy for this repo lives in `specs/lite/rules.md`, not in
 `speclite-ship`. Notes: `research/version-management.md`.
 
-## 021 Installer install-manifest + version / doctor / update
+## 021 Installer install-manifest + version / doctor / update - SHIPPED
 
 Record what each install put where, then add `version`, `doctor [--fix]` (stale or
 conflicting copies), and `update` (reinstall what's installed). `speclite-status` shows the

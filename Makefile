@@ -1,7 +1,7 @@
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 INSTALL := node $(REPO_ROOT)/bin/install.js
 
-.PHONY: help install install-cursor install-claude install-copilot install-codex install-opencode install-kiro uninstall list lint ci version bump tag
+.PHONY: help install install-cursor install-claude install-copilot install-codex install-opencode install-kiro uninstall list installed doctor update lint ci version bump tag
 .DEFAULT: help
 
 help: ## Show this help message
@@ -34,6 +34,15 @@ uninstall: ## Uninstall from all selected/detected targets
 list: ## List install targets and detection status
 	@$(INSTALL) --list
 
+installed: ## Show CLI version + what each target has installed
+	@$(INSTALL) version
+
+doctor: ## Report stale or conflicting speclite copies (FIX=1 to prune)
+	@$(INSTALL) doctor $(if $(FIX),--fix)
+
+update: ## Reinstall every target recorded in ~/.speclite/installs.json
+	@$(INSTALL) update
+
 version: ## Print the canonical version (package.json)
 	@node $(REPO_ROOT)/bin/version.js
 
@@ -52,5 +61,6 @@ ci: ## Run the full CI suite locally (version check + installer dry-run + markdo
 	@$(INSTALL) --list
 	@for t in claude copilot cursor codex opencode kiro; do $(INSTALL) --only $$t --dry-run >/dev/null || exit 1; done
 	@for t in claude copilot cursor codex opencode kiro; do $(INSTALL) --only $$t --uninstall --dry-run >/dev/null || exit 1; done
+	@tmp=$$(mktemp -d); SPECLITE_HOME=$$tmp $(INSTALL) version >/dev/null && SPECLITE_HOME=$$tmp $(INSTALL) update --dry-run >/dev/null; rc=$$?; rm -rf "$$tmp"; exit $$rc
 	@echo "installer dry-run OK"
 	@npx -y markdownlint-cli2@0.23.2

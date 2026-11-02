@@ -28,6 +28,33 @@ what's detected.
 > `make install` (all),
 > or `make uninstall`.
 
+## Check, repair, update
+
+Every real install is recorded in `~/.speclite/installs.json` (target, version, git sha,
+source, time; set `SPECLITE_HOME` to use another dir). Three subcommands read it:
+
+```bash
+# CLI version + what each target has installed:
+npx -y github:elnaterator/speclite -- version
+
+# find stale or conflicting copies (exit 1 if any); --fix prunes the safe ones:
+npx -y github:elnaterator/speclite -- doctor
+npx -y github:elnaterator/speclite -- doctor --fix
+
+# reinstall every recorded target from the current source:
+npx -y github:elnaterator/speclite -- update
+```
+
+`doctor` checks for: old Claude Code / Codex cache version dirs, an installed version older
+than the source, pre-plugin `~/.codex/skills/speclite-*` copies, the VS Code fallback copy
+beside a Copilot CLI install, recorded installs whose files are gone, and
+`speclite-*` skills in `~/.claude/skills/` or the project's `.claude/skills/` that shadow
+the plugin. `--fix` removes the first four kinds; shadowing skills are reported only (they
+may be a deliberate dev setup). From a clone: `make installed`, `make doctor` (`FIX=1`),
+`make update`.
+
+Installs made before the manifest existed are not listed until you install them once more.
+
 ## GitHub Copilot (CLI + VS Code)
 
 `--only copilot` installs once into the shared `~/.copilot/installed-plugins/` location via the
