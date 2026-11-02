@@ -116,7 +116,7 @@ speclite is and a link to the repo (<https://github.com/elnaterator/speclite>). 
 contributor who browses `specs/lite/` immediate context on the tooling. `rules.md` and
 `.mode` are unchanged.
 
-## 020 Version discipline — single version source, bump policy, release tags
+## 020 Version discipline — single version source, bump policy, release tags - SHIPPED
 
 One canonical version (`package.json`) stamped into every plugin manifest, CI check for
 drift, `vX.Y.Z` tags. Bump policy for this repo lives in `specs/lite/rules.md`, not in

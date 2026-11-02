@@ -23,6 +23,10 @@ jobs:
         with:
           node-version: '20'
 
+      # package.json is the single version source; every plugin manifest must match.
+      - name: Version check
+        run: node bin/version.js --check
+
       - name: List targets
         run: node bin/install.js --list
 

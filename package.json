@@ -1,6 +1,6 @@
 {
   "name": "speclite",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "Lightweight spec-driven development plugin for Claude Code, GitHub Copilot (CLI + VS Code), and Cursor. Cross-platform installer, zero runtime deps.",
   "bin": {
     "speclite-install": "bin/install.js"

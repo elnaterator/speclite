@@ -12,7 +12,8 @@ plugin and running the skills against a target repo.
 .claude-plugin/   Claude Code + Copilot CLI + VS Code: plugin.json, marketplace.json (shared Claude-format)
 .cursor-plugin/   Cursor: plugin.json
 bin/install.js    cross-platform installer (pure Node, zero deps; target registry)
-package.json      minimal; "bin" entry enables the npx one-liner
+bin/version.js    version tool: print / --check drift / --set (package.json = source)
+package.json      canonical version; "bin" entry enables the npx one-liner
 skills/           one SKILL.md per skill (shared — all platforms discover here)
 hooks/            hooks.json + mode-stop.sh (Stop hook for loop modes)
 templates/        roadmap.md, plan-template.md, rules.md (source for speclite-init)
@@ -78,6 +79,23 @@ ln -sf "$(pwd)" ~/.cursor/plugins/local/speclite
 
 (`node bin/install.js --only cursor` instead does a one-shot copy.) Run **Developer: Reload
 Window** after changes. No `marketplace.json` is needed (single-plugin repo).
+
+## Versioning & releases
+
+`package.json` is the single version source. The plugin manifests
+(`.claude-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `.codex-plugin/plugin.json`) are
+stamped from it — never hand-edit their `version`.
+
+```bash
+make version          # print the canonical version
+make bump V=0.5.0     # write it to package.json + every manifest
+make tag              # after merge, on trunk: tag HEAD v<version> (does not push)
+git push origin v0.5.0
+```
+
+CI runs `node bin/version.js --check` and fails if any manifest drifts. Bump in the same PR as
+the change — policy (feat → minor, fix → patch, docs/chore → none) lives in
+`specs/lite/rules.md`. A bump matters: `claude plugin update` only re-syncs on a new version.
 
 ## Editing templates (two-copy pattern)
 
