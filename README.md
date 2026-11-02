@@ -57,6 +57,9 @@ npx -y github:elnaterator/speclite -- --all
 npx -y github:elnaterator/speclite -- --only copilot
 ```
 
+Check for stale or duplicate copies with `npx -y github:elnaterator/speclite -- doctor`
+(`--fix` to prune), and refresh everything you installed with `… -- update`.
+
 See [docs/INSTALL.md](./docs/INSTALL.md) for per-agent setup, the Makefile flow, preview flags,
 and the compatibility matrix.
 

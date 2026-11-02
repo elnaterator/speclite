@@ -49,6 +49,15 @@ jobs:
             echo "::endgroup::"
           done
 
+      # Subcommands against an empty, throwaway manifest. doctor runs report-only (no --fix)
+      # and must find nothing on a bare runner.
+      - name: version / update / doctor
+        run: |
+          export SPECLITE_HOME="$(mktemp -d)"
+          node bin/install.js version
+          node bin/install.js update --dry-run
+          node bin/install.js doctor
+
   markdown:
     name: markdown lint
     runs-on: ubuntu-latest

@@ -9,7 +9,11 @@
  * append one descriptor + its functions, main() never changes.
  *
  * Usage:
- *   node bin/install.js [flags]
+ *   node bin/install.js [command] [flags]
+ *     (no command)    install / uninstall per the flags below
+ *     version         print CLI version + what each target has installed
+ *     doctor [--fix]  report stale or conflicting copies; --fix prunes the safe ones
+ *     update          reinstall every target recorded in the install manifest
  *     --only <id>     claude | copilot | cursor | codex | opencode | kiro (repeatable)
  *     --all           install all detected targets
  *     --source <src>  owner/repo | local path | git URL (auto-detected when omitted)
@@ -17,6 +21,9 @@
  *     --uninstall     remove the install for the selected target(s)
  *     --list          print the target table and exit
  *     -h, --help      usage
+ *
+ * Every real install is recorded in ~/.speclite/installs.json ($SPECLITE_HOME overrides
+ * ~/.speclite) so version / doctor / update know what was put where.
  */
 
 const fs = require("fs");
@@ -274,6 +281,13 @@ const CURSOR_DIR = path.join(os.homedir(), ".cursor", "plugins", "local", PLUGIN
 // points at the parent; the plugin lives in a named subdir.
 const VSCODE_FALLBACK_PARENT = path.join(os.homedir(), ".speclite", "plugins");
 const VSCODE_FALLBACK_DIR = path.join(VSCODE_FALLBACK_PARENT, PLUGIN_NAME);
+// Where the host CLIs land their copies. Claude + Codex keep one subdir per version.
+const CLAUDE_CACHE_DIR = () =>
+  path.join(os.homedir(), ".claude", "plugins", "cache", MARKETPLACE, PLUGIN_NAME);
+const CODEX_CACHE_DIR = () =>
+  path.join(os.homedir(), ".codex", "plugins", "cache", MARKETPLACE, PLUGIN_NAME);
+const COPILOT_PLUGIN_DIR = () =>
+  path.join(os.homedir(), ".copilot", "installed-plugins", MARKETPLACE, PLUGIN_NAME);
 
 function installClaude(ctx) {
   if (!hasCmd("claude")) {
@@ -447,6 +461,7 @@ function skillsDirTarget({ id, name, label, cmd, dir, detect, extras }) {
     id,
     label,
     detect,
+    installedPath: () => path.join(dir(), "speclite-run"),
     install(ctx) {
       if (cmd && !hasCmd(cmd)) {
         if (!ctx.dry) {
@@ -641,6 +656,7 @@ const TARGETS = [
     id: "claude",
     label: "Claude Code (claude CLI + local marketplace)",
     detect: () => hasCmd("claude"),
+    installedPath: CLAUDE_CACHE_DIR,
     install: installClaude,
     uninstall: uninstallClaude,
   },
@@ -648,6 +664,8 @@ const TARGETS = [
     id: "copilot",
     label: "GitHub Copilot CLI + VS Code (shared install location)",
     detect: () => hasCmd("copilot") || vscodePresent(),
+    installedPath: () =>
+      fs.existsSync(COPILOT_PLUGIN_DIR()) ? COPILOT_PLUGIN_DIR() : VSCODE_FALLBACK_DIR,
     install: installCopilot,
     uninstall: uninstallCopilot,
   },
@@ -655,6 +673,7 @@ const TARGETS = [
     id: "cursor",
     label: "Cursor IDE or `agent` CLI (local plugin copy)",
     detect: () => hasCmd("agent") || fs.existsSync(path.join(os.homedir(), ".cursor")),
+    installedPath: () => CURSOR_DIR,
     install: installCursor,
     uninstall: uninstallCursor,
   },
@@ -662,6 +681,7 @@ const TARGETS = [
     id: "codex",
     label: "Codex CLI + desktop app (plugin: skills + Stop hook)",
     detect: () => hasCmd("codex") || fs.existsSync(path.join(os.homedir(), ".codex")),
+    installedPath: CODEX_CACHE_DIR,
     install: installCodex,
     uninstall: uninstallCodex,
   },
@@ -705,31 +725,304 @@ function resolveSource(repoRoot, opts) {
 }
 
 // ---------------------------------------------------------------------------
+// Install manifest
+// ---------------------------------------------------------------------------
+
+// One entry per target, written after every real install and dropped on uninstall.
+// Copy-based targets carry no version of their own, so this is the only record of what
+// went where.
+const SPECLITE_HOME = () => process.env.SPECLITE_HOME || path.join(os.homedir(), ".speclite");
+const MANIFEST_FILE = () => path.join(SPECLITE_HOME(), "installs.json");
+
+function readManifest() {
+  const m = readJson(MANIFEST_FILE());
+  return { schema: 1, installs: m.installs || {} };
+}
+
+function writeManifest(manifest, ctx) {
+  if (ctx.dry) return; // a preview never touches the record
+  writeJson(MANIFEST_FILE(), manifest, ctx);
+}
+
+function sourceVersion(repoRoot) {
+  return readJson(path.join(repoRoot, "package.json")).version || null;
+}
+
+function sourceSha(repoRoot) {
+  if (!fs.existsSync(path.join(repoRoot, ".git"))) return null;
+  const r = spawnSync("git", ["-C", repoRoot, "rev-parse", "HEAD"], { encoding: "utf8" });
+  return r.status === 0 ? r.stdout.trim() : null;
+}
+
+function recordInstall(t, ctx) {
+  const manifest = readManifest();
+  manifest.installs[t.id] = {
+    target: t.id,
+    version: sourceVersion(ctx.repoRoot),
+    sha: sourceSha(ctx.repoRoot),
+    source: ctx.source,
+    installedAt: new Date().toISOString(),
+  };
+  writeManifest(manifest, ctx);
+}
+
+function forgetInstall(t, ctx) {
+  const manifest = readManifest();
+  if (!(t.id in manifest.installs)) return;
+  delete manifest.installs[t.id];
+  writeManifest(manifest, ctx);
+}
+
+// Numeric semver compare on major.minor.patch (pre-release tags ignored).
+function compareVersions(a, b) {
+  const pa = String(a).split("-")[0].split(".").map(Number);
+  const pb = String(b).split("-")[0].split(".").map(Number);
+  for (let i = 0; i < 3; i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0);
+    if (d) return d;
+  }
+  return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Subcommands: version / doctor / update
+// ---------------------------------------------------------------------------
+
+function cmdVersion(ctx) {
+  log(`speclite ${sourceVersion(ctx.repoRoot) || "unknown"} (installer at ${ctx.repoRoot})`);
+  const sha = sourceSha(ctx.repoRoot);
+  if (sha) log(`source sha ${sha.slice(0, 12)}`);
+  const installs = Object.values(readManifest().installs);
+  log("");
+  if (!installs.length) {
+    log(`No installs recorded in ${MANIFEST_FILE()}.`);
+    return 0;
+  }
+  log(`Installed (${MANIFEST_FILE()}):`);
+  for (const e of installs) {
+    const short = e.sha ? e.sha.slice(0, 12) : "no sha";
+    log(`  ${e.target.padEnd(8)} ${e.version || "?"}  ${short}  ${e.installedAt}  ${e.source}`);
+  }
+  return 0;
+}
+
+function versionDirs(dir) {
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .map((e) => e.name)
+    .sort(compareVersions);
+}
+
+function speclitePrefixed(dir) {
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir)
+    .filter((n) => n.startsWith("speclite-"))
+    .map((n) => path.join(dir, n));
+}
+
+// Each check returns findings: { msg, fix?(ctx) }. A finding without fix() is reported
+// only — doctor never deletes what a user may have set up on purpose (dev symlinks,
+// project-level copies); it says how to resolve it instead.
+const DOCTOR_CHECKS = [
+  function hostCaches(ctx) {
+    const findings = [];
+    const want = sourceVersion(ctx.repoRoot);
+    const hosts = [
+      ["Claude Code", "claude", CLAUDE_CACHE_DIR()],
+      ["Codex", "codex", CODEX_CACHE_DIR()],
+    ];
+    for (const [host, id, dir] of hosts) {
+      const versions = versionDirs(dir);
+      if (!versions.length) continue;
+      const newest = versions[versions.length - 1];
+      for (const v of versions.slice(0, -1)) {
+        const stale = path.join(dir, v);
+        findings.push({
+          msg: `${host}: old cached version ${v} beside ${newest} — ${stale}`,
+          fix: (c) => rmDir(stale, c) && log(`  removed ${stale}`),
+        });
+      }
+      if (want && compareVersions(newest, want) < 0) {
+        findings.push({
+          msg: `${host}: installed ${newest} is older than source ${want} — reinstall with \`--only ${id}\``,
+        });
+      }
+    }
+    return findings;
+  },
+  function devShadows() {
+    return speclitePrefixed(path.join(os.homedir(), ".claude", "skills")).map((p) => ({
+      msg: `user-level skill shadows the Claude plugin — ${p} (remove it unless you are developing speclite)`,
+    }));
+  },
+  function legacyCodexSkills(ctx) {
+    const dir = CODEX_LEGACY_SKILLS_DIR();
+    const present = skillNames(ctx.repoRoot).filter((n) => fs.existsSync(path.join(dir, n)));
+    if (!present.length) return [];
+    return [
+      {
+        msg: `Codex: ${present.length} pre-plugin skill copies in ${dir} (skills load twice)`,
+        fix: (c) => pruneLegacyCodexSkills(c),
+      },
+    ];
+  },
+  function vscodeFallbackDuplicate(ctx) {
+    if (!fs.existsSync(COPILOT_PLUGIN_DIR())) return [];
+    const settings = vscodePresent() ? readJson(vscodeSettingsPath()) : {};
+    const locations = settings["chat.pluginLocations"] || {};
+    const registered = VSCODE_FALLBACK_PARENT in locations;
+    if (!fs.existsSync(VSCODE_FALLBACK_DIR) && !registered) return [];
+    return [
+      {
+        msg: `VS Code: fallback copy ${VSCODE_FALLBACK_DIR} alongside the Copilot install (skills load twice)`,
+        fix: (c) => {
+          if (rmDir(VSCODE_FALLBACK_DIR, c)) log(`  removed ${VSCODE_FALLBACK_DIR}`);
+          if (registered) {
+            delete locations[VSCODE_FALLBACK_PARENT];
+            settings["chat.pluginLocations"] = locations;
+            writeJson(vscodeSettingsPath(), settings, c);
+            log("  removed speclite from VS Code chat.pluginLocations");
+          }
+        },
+      },
+    ];
+  },
+  function projectCopies() {
+    return speclitePrefixed(path.join(process.cwd(), ".claude", "skills")).map((p) => ({
+      msg: `project-level skill copy shadows the plugin — ${p}`,
+    }));
+  },
+  function manifestEntries(ctx) {
+    const findings = [];
+    const want = sourceVersion(ctx.repoRoot);
+    const sha = sourceSha(ctx.repoRoot);
+    for (const e of Object.values(readManifest().installs)) {
+      const t = targetById(e.target);
+      const where = t && t.installedPath ? t.installedPath() : null;
+      if (where && !fs.existsSync(where)) {
+        findings.push({
+          msg: `${e.target}: recorded install is gone (${where})`,
+          fix: (c) => {
+            forgetInstall({ id: e.target }, c);
+            log(`  dropped ${e.target} from ${MANIFEST_FILE()}`);
+          },
+        });
+        continue;
+      }
+      if (want && e.version && compareVersions(e.version, want) < 0) {
+        findings.push({ msg: `${e.target}: installed ${e.version}, source is ${want} — run \`update\`` });
+      } else if (sha && e.sha && e.sha !== sha) {
+        findings.push({
+          msg: `${e.target}: installed from ${e.sha.slice(0, 12)}, source is ${sha.slice(0, 12)} — run \`update\``,
+        });
+      }
+    }
+    return findings;
+  },
+];
+
+function cmdDoctor(ctx) {
+  if (ctx.dry) log("[dry-run] no files will be written\n");
+  const findings = DOCTOR_CHECKS.flatMap((check) => check(ctx));
+  if (!findings.length) {
+    log("doctor: no stale or conflicting speclite copies found.");
+    return 0;
+  }
+  let open = 0;
+  for (const f of findings) {
+    const tag = f.fix ? (ctx.opts.fix ? "fix " : "fixable") : "manual";
+    log(`[${tag.padEnd(7)}] ${f.msg}`);
+    if (f.fix && ctx.opts.fix) {
+      f.fix(ctx);
+    } else {
+      open++;
+    }
+  }
+  log("");
+  if (!open) {
+    log(ctx.dry ? "doctor: all findings fixable (dry-run, nothing changed)." : "doctor: fixed.");
+    return 0;
+  }
+  const fixable = findings.filter((f) => f.fix).length;
+  log(`doctor: ${open} problem(s) open.` + (fixable && !ctx.opts.fix ? " Re-run with --fix to prune the fixable ones." : ""));
+  return 1;
+}
+
+function cmdUpdate(ctx) {
+  const ids = Object.keys(readManifest().installs);
+  if (!ids.length) {
+    log(`No installs recorded in ${MANIFEST_FILE()} — install with --only <id> or --all first.`);
+    return 0;
+  }
+  if (ctx.dry) log("[dry-run] no files will be written\n");
+  log(`Source: ${ctx.source}\n`);
+  for (const id of ids) {
+    const t = targetById(id);
+    if (!t) {
+      warn(`skipping unknown target in manifest: ${id}`);
+      continue;
+    }
+    log(`Updating ${t.id} — ${t.label}`);
+    t.install(ctx);
+    recordInstall(t, ctx);
+    log("");
+  }
+  log(ctx.dry ? "Done (dry-run)." : "Done.");
+  return 0;
+}
+
+const COMMANDS = { version: cmdVersion, doctor: cmdDoctor, update: cmdUpdate };
+
+// ---------------------------------------------------------------------------
 // Args + main
 // ---------------------------------------------------------------------------
 
 const HELP = `speclite installer
 
-Usage: node bin/install.js [flags]
+Usage: node bin/install.js [command] [flags]
+
+Commands (omit to install / uninstall per the flags):
+  version         Print the CLI version and what each target has installed
+  doctor          Report stale or conflicting speclite copies (exit 1 if any)
+  update          Reinstall every target recorded in the install manifest
 
 Flags:
-  --only <id>     Install only this target (repeatable): claude | copilot | cursor
+  --only <id>     Install only this target (repeatable):
+                  claude | copilot | cursor | codex | opencode | kiro
   --all           Install all detected targets
   --source <src>  owner/repo | local path | git URL (auto-detected when omitted)
   --dry-run       Print actions without writing anything
   --uninstall     Remove the install for the selected target(s)
   --list          Print the target table and exit
+  --fix           doctor: prune the fixable findings
   -h, --help      Show this help
+
+Installs are recorded in ~/.speclite/installs.json (override dir with SPECLITE_HOME).
 
 Examples:
   node bin/install.js --only copilot
   node bin/install.js --only copilot --dry-run
   node bin/install.js --all
   npx -y github:elnaterator/speclite -- --only copilot
+  npx -y github:elnaterator/speclite -- doctor --fix
+  npx -y github:elnaterator/speclite -- update
 `;
 
 function parseArgs(argv) {
-  const opts = { only: [], all: false, source: null, dry: false, uninstall: false, list: false, help: false };
+  const opts = {
+    cmd: null,
+    only: [],
+    all: false,
+    source: null,
+    dry: false,
+    fix: false,
+    uninstall: false,
+    list: false,
+    help: false,
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     switch (a) {
@@ -755,9 +1048,16 @@ function parseArgs(argv) {
       case "--help":
         opts.help = true;
         break;
+      case "--fix":
+        opts.fix = true;
+        break;
       case "--":
         break; // accept and ignore POSIX separator (npx passes it through)
       default:
+        if (!opts.cmd && Object.prototype.hasOwnProperty.call(COMMANDS, a)) {
+          opts.cmd = a;
+          break;
+        }
         fail(`unknown flag: ${a}\n\n${HELP}`);
     }
   }
@@ -788,12 +1088,17 @@ function main() {
   const source = resolveSource(repoRoot, opts);
   const ctx = { repoRoot, source, dry: opts.dry, opts };
 
+  if (opts.cmd) {
+    process.exitCode = COMMANDS[opts.cmd](ctx);
+    return;
+  }
+
   // Resolve selected targets.
   let selected;
   if (opts.only.length) {
     selected = opts.only.map((id) => {
       const t = targetById(id);
-      if (!t) fail(`unknown target: ${id} (expected claude | copilot | cursor)`);
+      if (!t) fail(`unknown target: ${id} (expected ${TARGETS.map((x) => x.id).join(" | ")})`);
       return t;
     });
   } else if (opts.all) {
@@ -813,8 +1118,10 @@ function main() {
     log(`${verb} ${t.id} — ${t.label}`);
     if (opts.uninstall) {
       t.uninstall(ctx);
+      forgetInstall(t, ctx);
     } else {
       t.install(ctx);
+      recordInstall(t, ctx);
     }
     log("");
   }
