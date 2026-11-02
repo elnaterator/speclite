@@ -115,3 +115,21 @@ Add a `kiro` target on the 017 helper plus Kiro's native Stop-hook loop (CLI 3.0
 speclite is and a link to the repo (<https://github.com/elnaterator/speclite>). Gives any
 contributor who browses `specs/lite/` immediate context on the tooling. `rules.md` and
 `.mode` are unchanged.
+
+## 020 Version discipline — single version source, bump policy, release tags
+
+One canonical version (`package.json`) stamped into every plugin manifest, CI check for
+drift, `vX.Y.Z` tags. Bump policy for this repo lives in `specs/lite/rules.md`, not in
+`speclite-ship`. Notes: `research/version-management.md`.
+
+## 021 Installer install-manifest + version / doctor / update
+
+Record what each install put where, then add `version`, `doctor [--fix]` (stale or
+conflicting copies), and `update` (reinstall what's installed). `speclite-status` shows the
+plugin version. Notes: `research/version-management.md`.
+
+## 022 Publish to npm — `npx speclite@latest <cmd>`
+
+Ship the installer as an npm package so users without the repo run one always-current
+command. Release workflow on tag. Add basic update instructions to the `specs/lite/README.md`
+that `speclite-init` writes. Notes: `research/version-management.md`.
