@@ -1,7 +1,7 @@
 # speclite
 
 [![CI](https://github.com/elnaterator/speclite/actions/workflows/ci.yml/badge.svg)](https://github.com/elnaterator/speclite/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/speclite)](https://www.npmjs.com/package/speclite)
+[![npm](https://img.shields.io/npm/v/@elnaterator/speclite)](https://www.npmjs.com/package/@elnaterator/speclite)
 
 **Spec-driven development for AI coding agents, without the ceremony.**
 
@@ -34,7 +34,7 @@ It is just markdown skills plus git. No server, no database, no build step.
 **1. Install** (Node 16+; detects which agents you have):
 
 ```bash
-npx speclite@latest --all
+npx @elnaterator/speclite@latest --all
 ```
 
 Restart your agent so it picks up the skills.
@@ -172,8 +172,8 @@ How the loop is driven on each platform: [docs/LOOP.md](./docs/LOOP.md).
 | Anything else / headless | — | [`bin/loop.sh`](./bin/loop.sh) |
 
 ```bash
-npx speclite@latest --only cursor      # one agent
-npx speclite@latest --list             # what's detected
+npx @elnaterator/speclite@latest --only cursor      # one agent
+npx @elnaterator/speclite@latest --list             # what's detected
 ```
 
 Per-agent details: [docs/INSTALL.md](./docs/INSTALL.md).
@@ -181,9 +181,9 @@ Per-agent details: [docs/INSTALL.md](./docs/INSTALL.md).
 ## Keeping current
 
 ```bash
-npx speclite@latest update     # update everything you installed
-npx speclite@latest doctor     # find stale or duplicate copies (--fix to prune)
-npx speclite@latest version    # what is installed where
+npx @elnaterator/speclite@latest update     # update everything you installed
+npx @elnaterator/speclite@latest doctor     # find stale or duplicate copies (--fix to prune)
+npx @elnaterator/speclite@latest version    # what is installed where
 ```
 
 ## Customize
