@@ -102,8 +102,8 @@ dependencies (Node + `npx` only):
   (`npx @elnaterator/speclite@latest`) won't get it.
 
 **Release** — `.github/workflows/release.yml` runs on a `v*` tag push: tag must equal
-`v<package.json version>`, then version check + installer dry-run + `npm publish
---provenance` (secret `NPM_TOKEN`).
+`v<package.json version>`, then version check + installer dry-run + `npm publish` via npm
+**trusted publishing** (OIDC, `id-token: write`, npm ≥ 11.5.1 from Node 24; no token/secret, provenance automatic). npmjs.com trusts `elnaterator/speclite` + workflow file `release.yml` — renaming the file breaks publishing until that config is updated.
 
 Run the same checks locally:
 
