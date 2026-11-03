@@ -1,10 +1,21 @@
 {
   "name": "speclite",
-  "version": "0.5.0",
-  "description": "Lightweight spec-driven development plugin for Claude Code, GitHub Copilot (CLI + VS Code), and Cursor. Cross-platform installer, zero runtime deps.",
+  "version": "0.6.0",
+  "description": "Lightweight spec-driven development for AI coding agents: roadmap → plan → build → review → ship, as markdown skills. Installs into Claude Code, GitHub Copilot (CLI + VS Code), Cursor, Codex, OpenCode, and Kiro. Zero runtime deps.",
   "bin": {
+    "speclite": "bin/install.js",
     "speclite-install": "bin/install.js"
   },
+  "files": [
+    "bin/",
+    "skills/",
+    "hooks/",
+    "templates/",
+    "plugins/",
+    ".claude-plugin/",
+    ".cursor-plugin/",
+    ".codex-plugin/"
+  ],
   "scripts": {
     "install-plugin": "node bin/install.js"
   },
@@ -16,7 +27,11 @@
     "git",
     "claude-code",
     "copilot",
-    "cursor"
+    "cursor",
+    "codex",
+    "opencode",
+    "kiro",
+    "agent-skills"
   ],
   "author": {
     "name": "Nathan Hadzariga"
@@ -28,5 +43,13 @@
   },
   "engines": {
     "node": ">=16"
+  },
+  "homepage": "https://github.com/elnaterator/speclite#readme",
+  "bugs": {
+    "url": "https://github.com/elnaterator/speclite/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

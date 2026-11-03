@@ -1006,9 +1006,9 @@ Examples:
   node bin/install.js --only copilot
   node bin/install.js --only copilot --dry-run
   node bin/install.js --all
-  npx -y github:elnaterator/speclite -- --only copilot
-  npx -y github:elnaterator/speclite -- doctor --fix
-  npx -y github:elnaterator/speclite -- update
+  npx speclite@latest --only copilot
+  npx speclite@latest doctor --fix
+  npx speclite@latest update
 `;
 
 function parseArgs(argv) {

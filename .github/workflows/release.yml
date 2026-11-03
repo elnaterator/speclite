@@ -1,0 +1,55 @@
+name: Release
+
+# Publish the installer to npm when a vX.Y.Z tag is pushed (see specs/lite/rules.md).
+# Needs the NPM_TOKEN repo secret (npm automation token). Provenance links the published
+# package back to this workflow run.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write # npm provenance
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      # The tag must name the version being published — catches tagging before `make bump`.
+      - name: Tag matches package.json
+        run: |
+          want="v$(node bin/version.js)"
+          if [ "$GITHUB_REF_NAME" != "$want" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json ($want)"
+            exit 1
+          fi
+
+      - name: Version check
+        run: node bin/version.js --check
+
+      - name: Installer dry-run (each target)
+        run: |
+          for target in claude copilot cursor codex opencode kiro; do
+            node bin/install.js --only "$target" --dry-run >/dev/null
+          done
+
+      - name: Pack contents
+        run: npm pack --dry-run
+
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -21,3 +21,14 @@ Key commands:
 /speclite-ship    commit, push, open a PR
 /speclite-run     dispatcher: run the right next skill automatically
 ```
+
+## Install / update
+
+speclite installs into Claude Code, GitHub Copilot (CLI + VS Code), Cursor, Codex, OpenCode,
+and Kiro. Needs Node 16+:
+
+```bash
+npx speclite@latest --all      # install for every agent detected on this machine
+npx speclite@latest update     # update everything you installed
+npx speclite@latest doctor     # find stale or duplicate copies (--fix to prune)
+```

@@ -8,15 +8,18 @@ hooks, and templates are shared. One cross-platform installer
 
 ## Quick start (npx — no clone)
 
+Needs Node 16+. `@latest` makes npx check the registry every run, so you always get the
+current installer — nothing to install globally or keep up to date.
+
 ```bash
 # install for every agent detected on your machine:
-npx -y github:elnaterator/speclite -- --all
+npx speclite@latest --all
 
 # or a single agent like GitHub Copilot (CLI + VS Code):
-npx -y github:elnaterator/speclite -- --only copilot
+npx speclite@latest --only copilot
 
 # preview without writing anything:
-npx -y github:elnaterator/speclite -- --only copilot --dry-run
+npx speclite@latest --only copilot --dry-run
 ```
 
 Targets: `--only claude`, `--only copilot`, `--only cursor`, `--only codex`,
@@ -28,6 +31,9 @@ what's detected.
 > `make install` (all),
 > or `make uninstall`.
 
+> No npm registry access? Run straight from GitHub instead (npx caches git packages, so
+> this can lag behind the latest release): `npx -y github:elnaterator/speclite -- --all`.
+
 ## Check, repair, update
 
 Every real install is recorded in `~/.speclite/installs.json` (target, version, git sha,
@@ -35,14 +41,14 @@ source, time; set `SPECLITE_HOME` to use another dir). Three subcommands read it
 
 ```bash
 # CLI version + what each target has installed:
-npx -y github:elnaterator/speclite -- version
+npx speclite@latest version
 
 # find stale or conflicting copies (exit 1 if any); --fix prunes the safe ones:
-npx -y github:elnaterator/speclite -- doctor
-npx -y github:elnaterator/speclite -- doctor --fix
+npx speclite@latest doctor
+npx speclite@latest doctor --fix
 
 # reinstall every recorded target from the current source:
-npx -y github:elnaterator/speclite -- update
+npx speclite@latest update
 ```
 
 `doctor` checks for: old Claude Code / Codex cache version dirs, an installed version older
@@ -52,6 +58,10 @@ beside a Copilot CLI install, recorded installs whose files are gone, and
 the plugin. `--fix` removes the first four kinds; shadowing skills are reported only (they
 may be a deliberate dev setup). From a clone: `make installed`, `make doctor` (`FIX=1`),
 `make update`.
+
+To update speclite itself, run `npx speclite@latest update` — it fetches the newest release
+and reinstalls every target you installed before. Claude Code, Copilot, and Codex track the
+GitHub repo through their own marketplaces; `update` drives their native updaters.
 
 Installs made before the manifest existed are not listed until you install them once more.
 
@@ -71,7 +81,7 @@ on the VS Code preview flag `chat.plugins.enabled`.
 ## Claude Code
 
 ```bash
-npx -y github:elnaterator/speclite -- --only claude
+npx speclite@latest --only claude
 # or, from a clone: make install-claude
 ```
 
@@ -82,7 +92,7 @@ the `claude` CLI on PATH. Restart Claude Code (or `/reload-plugins`); verify wit
 ## Cursor
 
 ```bash
-npx -y github:elnaterator/speclite -- --only cursor
+npx speclite@latest --only cursor
 # or, from a clone: make install-cursor
 ```
 
@@ -95,7 +105,7 @@ Codex installs speclite as a real plugin — skills and the Stop hook together, 
 covering the CLI and the ChatGPT desktop app:
 
 ```bash
-npx -y github:elnaterator/speclite -- --only codex
+npx speclite@latest --only codex
 # or, from a clone: make install-codex
 ```
 
@@ -121,7 +131,7 @@ drive git.
 OpenCode gets the skills directory plus a loop plugin:
 
 ```bash
-npx -y github:elnaterator/speclite -- --only opencode
+npx speclite@latest --only opencode
 # or, from a clone: make install-opencode
 ```
 
@@ -144,7 +154,7 @@ Kiro reads Agent Skills natively and its V3 engine honors a Stop block reply, so
 gets the skills directory plus a global Stop hook:
 
 ```bash
-npx -y github:elnaterator/speclite -- --only kiro
+npx speclite@latest --only kiro
 # or, from a clone: make install-kiro
 ```
 
