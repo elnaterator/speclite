@@ -128,7 +128,7 @@ Record what each install put where, then add `version`, `doctor [--fix]` (stale 
 conflicting copies), and `update` (reinstall what's installed). `speclite-status` shows the
 plugin version. Notes: `research/version-management.md`.
 
-## 022 Publish to npm — `npx speclite@latest <cmd>` - BUILT
+## 022 Publish to npm — `npx speclite@latest <cmd>` - SHIPPED
 
 Ship the installer as an npm package so users without the repo run one always-current
 command. Release workflow on tag. Add basic update instructions to the `specs/lite/README.md`
