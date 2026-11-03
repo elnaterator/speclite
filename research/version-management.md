@@ -70,5 +70,10 @@ tool, and to know they have no stale or conflicting copies.
 
 ## Open questions
 
-- npm name: `speclite` free? Fallback `@elnaterator/speclite`. Check `npm view speclite`.
+- ~~npm name: `speclite` free?~~ Resolved 2026-11-02: unregistered, but the first publish
+  (v0.6.0) got `E403 Package name too similar to existing package spec-lite`. npm's
+  typosquat check compares names with punctuation stripped. Published scoped instead:
+  `@elnaterator/speclite` (scopes skip the check; only the owner can publish). The `bin`
+  stays `speclite` — npx runs the bin matching the unscoped part, so no alias juggling.
+  Shipped as 0.6.1; `v0.6.0` was tagged but never reached npm.
 - Keep `npx github:elnaterator/speclite` documented for one release as a fallback.

@@ -28,7 +28,7 @@ speclite installs into Claude Code, GitHub Copilot (CLI + VS Code), Cursor, Code
 and Kiro. Needs Node 16+:
 
 ```bash
-npx speclite@latest --all      # install for every agent detected on this machine
-npx speclite@latest update     # update everything you installed
-npx speclite@latest doctor     # find stale or duplicate copies (--fix to prune)
+npx @elnaterator/speclite@latest --all      # install for every agent detected on this machine
+npx @elnaterator/speclite@latest update     # update everything you installed
+npx @elnaterator/speclite@latest doctor     # find stale or duplicate copies (--fix to prune)
 ```

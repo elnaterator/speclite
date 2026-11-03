@@ -13,13 +13,13 @@ current installer — nothing to install globally or keep up to date.
 
 ```bash
 # install for every agent detected on your machine:
-npx speclite@latest --all
+npx @elnaterator/speclite@latest --all
 
 # or a single agent like GitHub Copilot (CLI + VS Code):
-npx speclite@latest --only copilot
+npx @elnaterator/speclite@latest --only copilot
 
 # preview without writing anything:
-npx speclite@latest --only copilot --dry-run
+npx @elnaterator/speclite@latest --only copilot --dry-run
 ```
 
 Targets: `--only claude`, `--only copilot`, `--only cursor`, `--only codex`,
@@ -41,14 +41,14 @@ source, time; set `SPECLITE_HOME` to use another dir). Three subcommands read it
 
 ```bash
 # CLI version + what each target has installed:
-npx speclite@latest version
+npx @elnaterator/speclite@latest version
 
 # find stale or conflicting copies (exit 1 if any); --fix prunes the safe ones:
-npx speclite@latest doctor
-npx speclite@latest doctor --fix
+npx @elnaterator/speclite@latest doctor
+npx @elnaterator/speclite@latest doctor --fix
 
 # reinstall every recorded target from the current source:
-npx speclite@latest update
+npx @elnaterator/speclite@latest update
 ```
 
 `doctor` checks for: old Claude Code / Codex cache version dirs, an installed version older
@@ -59,7 +59,7 @@ the plugin. `--fix` removes the first four kinds; shadowing skills are reported 
 may be a deliberate dev setup). From a clone: `make installed`, `make doctor` (`FIX=1`),
 `make update`.
 
-To update speclite itself, run `npx speclite@latest update` — it fetches the newest release
+To update speclite itself, run `npx @elnaterator/speclite@latest update` — it fetches the newest release
 and reinstalls every target you installed before. Claude Code, Copilot, and Codex track the
 GitHub repo through their own marketplaces; `update` drives their native updaters.
 
@@ -81,7 +81,7 @@ on the VS Code preview flag `chat.plugins.enabled`.
 ## Claude Code
 
 ```bash
-npx speclite@latest --only claude
+npx @elnaterator/speclite@latest --only claude
 # or, from a clone: make install-claude
 ```
 
@@ -92,7 +92,7 @@ the `claude` CLI on PATH. Restart Claude Code (or `/reload-plugins`); verify wit
 ## Cursor
 
 ```bash
-npx speclite@latest --only cursor
+npx @elnaterator/speclite@latest --only cursor
 # or, from a clone: make install-cursor
 ```
 
@@ -105,7 +105,7 @@ Codex installs speclite as a real plugin — skills and the Stop hook together, 
 covering the CLI and the ChatGPT desktop app:
 
 ```bash
-npx speclite@latest --only codex
+npx @elnaterator/speclite@latest --only codex
 # or, from a clone: make install-codex
 ```
 
@@ -131,7 +131,7 @@ drive git.
 OpenCode gets the skills directory plus a loop plugin:
 
 ```bash
-npx speclite@latest --only opencode
+npx @elnaterator/speclite@latest --only opencode
 # or, from a clone: make install-opencode
 ```
 
@@ -154,7 +154,7 @@ Kiro reads Agent Skills natively and its V3 engine honors a Stop block reply, so
 gets the skills directory plus a global Stop hook:
 
 ```bash
-npx speclite@latest --only kiro
+npx @elnaterator/speclite@latest --only kiro
 # or, from a clone: make install-kiro
 ```
 
