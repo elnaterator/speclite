@@ -1,8 +1,9 @@
 name: Release
 
 # Publish the installer to npm when a vX.Y.Z tag is pushed (see specs/lite/rules.md).
-# Needs the NPM_TOKEN repo secret (npm automation token). Provenance links the published
-# package back to this workflow run.
+# Auth is npm trusted publishing (OIDC): npmjs.com trusts this repo + this workflow file, so
+# no token or secret exists. Renaming this file breaks publishing until the trusted publisher
+# on npmjs.com is updated to match. Provenance is generated automatically.
 
 on:
   push:
@@ -10,7 +11,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write # npm provenance
+  id-token: write # OIDC for npm trusted publishing (+ provenance)
 
 concurrency:
   group: release-${{ github.ref }}
@@ -25,8 +26,15 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24' # bundles npm 11; trusted publishing needs npm >= 11.5.1
           registry-url: 'https://registry.npmjs.org'
+
+      - name: npm supports trusted publishing
+        run: |
+          v=$(npm --version)
+          echo "npm $v"
+          node -e 'const [a,b,c]=process.argv[1].split(".").map(Number); process.exit(a>11||(a===11&&(b>5||(b===5&&c>=1)))?0:1)' "$v" \
+            || { echo "::error::npm $v is older than 11.5.1 — trusted publishing unavailable"; exit 1; }
 
       # The tag must name the version being published — catches tagging before `make bump`.
       - name: Tag matches package.json
@@ -50,6 +58,4 @@ jobs:
         run: npm pack --dry-run
 
       - name: Publish
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public

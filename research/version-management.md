@@ -76,4 +76,7 @@ tool, and to know they have no stale or conflicting copies.
   `@elnaterator/speclite` (scopes skip the check; only the owner can publish). The `bin`
   stays `speclite` — npx runs the bin matching the unscoped part, so no alias juggling.
   Shipped as 0.6.1; `v0.6.0` was tagged but never reached npm.
+- Publish auth: started with an `NPM_TOKEN` automation token (0.6.1), moved to npm trusted
+  publishing (OIDC) right after — no long-lived secret to leak or rotate, provenance
+  automatic. Needs npm >= 11.5.1 (Node 24 in the release job) and GitHub-hosted runners.
 - Keep `npx github:elnaterator/speclite` documented for one release as a fallback.
