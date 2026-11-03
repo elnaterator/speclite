@@ -19,20 +19,25 @@ Never dispatched by `speclite-run`.
   high-level lines, link to research when it exists.
 - **refine** — reorder, merge, split, sharpen backlog items. Never touch non-backlog items.
 
-## No ceremony by default
+## Branch + PR by default (023)
 
-Roadmap is a living planning doc, not code. No branch, plan, or PR: commit on trunk
-(`chore(roadmap): …`) and push. Defensive checks:
+Originally (015) roadmap edits committed straight to trunk and pushed — "a living planning
+doc, not code". Changed in 023: a roadmap edit changes what gets built, so it deserves review;
+direct pushes also fail on protected branches and surprised new users. Now: pull trunk, mint
+ids, branch `chore/roadmap-<slug>`, commit, push, open a PR, return to trunk. Id collisions
+between concurrent roadmap PRs surface as a merge conflict on the roadmap; rebase and re-mint.
+
+Defensive checks (both paths):
 
 - must be on trunk (auto-detect via `origin/HEAD`)
 - tree clean except `specs/lite/roadmap.md` and `research/`
-- pull `--rebase` before push
+- pull before minting ids; `--rebase` before a direct-to-trunk push
 - pause and ask on a rejected push or dirty tree
 
-Opt-out: `rules.md` may require the branch+PR path (rules template already documents this);
-user can say "don't push" to leave the edit local.
+Opt-in: `rules.md` may allow committing straight to trunk (the original 015 behavior; rules
+template documents this). User can say "don't push" to leave the edit local.
 
 ## Relation to parallel-work ideas
 
-Minting ids on trunk (the add flow) is the "mint ids on trunk only" fix from `parallel.md`.
+Minting ids from freshly pulled trunk (the add flow) is the "mint ids on trunk only" fix from `parallel.md`.
 `speclite-groom` and `speclite-add` from that doc are this skill's refine and add flows.
