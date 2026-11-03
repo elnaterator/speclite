@@ -26,7 +26,7 @@ Core skills form pipeline. Default: 1 roadmap item = 1 plan = 1 git branch.
 - `speclite-review` (011) — review branch diff vs plan acceptance criteria + rules, flag drift (missing criteria, scope creep, unverified claims). Runs between `BUILT` and commit. Report-only by default; **conditional** (skips trivial diffs) under a loop mode; in full-auto auto-fixes failed findings and re-reviews up to a 3-attempt cap, else halts.
 - `speclite-ship` — plan-completeness check, commit, push, open PR, mark `SHIPPED`.
 
-`speclite-roadmap` sits **outside** the pipeline: it is the only skill that edits roadmap *text* (investigate an idea → `research/<topic>.md`, add items minting the next `<NNN>` on trunk, refine backlog-only items). No branch/plan/PR by default — commits `chore(roadmap): …` on trunk and pushes, with a `rules.md` opt-in for the branch+PR path. Never dispatched by `speclite-run`.
+`speclite-roadmap` sits **outside** the pipeline: it is the only skill that edits roadmap *text* (investigate an idea → `research/<topic>.md`, add items minting the next `<NNN>` on trunk, refine backlog-only items). No plan/build — by default it pulls trunk, mints ids, then commits `chore(roadmap): …` on a `chore/roadmap-<slug>` branch (no `<NNN>`, so never mistaken for pipeline work), opens a PR, and switches back to trunk (023). `rules.md` can opt into the old direct-to-trunk commit + push. Never dispatched by `speclite-run`.
 
 `BUILT` = code complete, verified locally, **not merged**. `SHIPPED` = committed, pushed, PR open.
 

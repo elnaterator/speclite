@@ -1,6 +1,6 @@
 {
   "name": "@elnaterator/speclite",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Lightweight spec-driven development for AI coding agents: roadmap → plan → build → review → ship, as markdown skills. Installs into Claude Code, GitHub Copilot (CLI + VS Code), Cursor, Codex, OpenCode, and Kiro. Zero runtime deps.",
   "bin": {
     "speclite": "bin/install.js",

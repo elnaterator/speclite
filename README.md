@@ -54,9 +54,9 @@ overwrites anything.
 /speclite-roadmap add rate-limit the login endpoint
 ```
 
-This writes item `001` to `specs/lite/roadmap.md` and commits it to your main branch (and
-pushes, if you have a remote — say "don't push" to keep it local). Prefer to type it
-yourself? Add a `## 001 <title>` heading to the roadmap by hand.
+This writes item `001` to `specs/lite/roadmap.md` on a `chore/roadmap-…` branch and opens a
+PR for it, so roadmap changes get reviewed like code. Merge it, then run step 4. Prefer to
+type it yourself? Add a `## 001 <title>` heading to the roadmap by hand.
 
 **4. Run it:**
 
@@ -193,7 +193,7 @@ sentences work:
 
 ```markdown
 - Run `make test` before marking anything BUILT.
-- Roadmap edits go through a branch + PR, not straight to main.
+- Roadmap edits may commit straight to main (default: branch + PR).
 - Bump the version in the same PR: feat → minor, fix → patch.
 ```
 

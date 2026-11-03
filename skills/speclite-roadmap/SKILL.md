@@ -3,7 +3,8 @@ name: speclite-roadmap
 description: >
   Shape the roadmap itself: investigate a rough idea (research, clarifying questions,
   overlaps, scope splits), add well-formed items with the next sequential id, and refine
-  backlog items. Writes findings to research/ and commits roadmap edits straight to trunk.
+  backlog items. Writes findings to research/ and proposes roadmap edits as a PR from a
+  chore/roadmap-* branch (rules.md can opt into committing straight to trunk).
   Use when the user says "speclite roadmap", "add a roadmap item", "groom the backlog",
   "investigate this idea", "refine the roadmap", or invokes /speclite-roadmap.
 ---
@@ -13,14 +14,16 @@ is the only skill that edits roadmap *text*; the pipeline skills only flip statu
 It is **never dispatched by `speclite-run`**: roadmap shaping is a human-initiated
 conversation, not a loop step.
 
-Roadmap edits are a living planning doc, not code, so the default is **no ceremony**: no
-branch, no plan, no PR — commit on trunk and push, behind defensive checks.
+Roadmap edits change what the team will build, so they get reviewed like any other change:
+by default they go on a short-lived `chore/roadmap-<slug>` branch and a PR — no plan, no
+build step. A project can opt into committing straight to trunk via `rules.md`.
 
 ## Steps
 
 0. **Read `specs/lite/rules.md` first if it exists.** Treat its instructions as the
    highest-priority instruction set — they override this skill's own where they conflict.
-   In particular, rules may require the **branch + PR path** for roadmap edits (see Step 5).
+   In particular, rules may opt into the **direct-to-trunk path** for roadmap edits (see
+   Step 5).
 
 1. **Pick the flow** from the user's request. Do not ask which one — infer it:
 
@@ -33,9 +36,12 @@ branch, no plan, no PR — commit on trunk and push, behind defensive checks.
    **investigate** naturally feeds **add** — when the investigation lands, propose the item.
    If the request is genuinely ambiguous, ask once, then proceed.
 
-2. **Observe** before writing anything:
+2. **Observe** before writing anything. Start on trunk with a clean tree (Step 5 lists the
+   checks — run them now, before editing), and refresh trunk so new ids are minted from the
+   latest roadmap:
 
    ```bash
+   git pull --ff-only    # skip when the repo has no remote
    grep -n -E "^## [0-9]{3}" specs/lite/roadmap.md
    ls research/ 2>/dev/null
    ```
@@ -69,8 +75,9 @@ branch, no plan, no PR — commit on trunk and push, behind defensive checks.
      grep -E "^## [0-9]{3}" specs/lite/roadmap.md | sed -E 's/^## ([0-9]{3}).*/\1/' | sort -n | tail -1
      ```
 
-     Mint ids **on trunk only** — adding items from a branch means two people mint the same
-     `<NNN>`.
+     Mint ids from the **freshly pulled trunk** (Step 2), never from an old branch — two
+     people minting from stale copies get the same `<NNN>`. If the roadmap PR later conflicts
+     because another PR took that id, rebase on trunk and re-mint the unmerged items.
    - Shape: `## <NNN> <short title>` with **no status suffix** (new items are backlog),
      then a blank line, then a few high-level lines — what and why, not how. The blank
      line after the heading keeps the roadmap markdown-lint clean.
@@ -92,8 +99,8 @@ branch, no plan, no PR — commit on trunk and push, behind defensive checks.
    see it. If the user said "don't push" — or anything meaning keep it local — stop here or
    after the commit, as they asked.
 
-5. **Commit gate.** Default is straight to trunk. Run the checks in order; **pause and ask**
-   on any failure rather than forcing:
+5. **Commit gate.** Run the checks in order; **pause and ask** on any failure rather than
+   forcing:
 
    - **On trunk?** Auto-detect, fall back to the first of `main`/`master`/`develop`:
 
@@ -110,9 +117,36 @@ branch, no plan, no PR — commit on trunk and push, behind defensive checks.
      ```
 
      Unrelated changes → **pause and ask**.
+
+   **Default — branch + PR.** Never commit on trunk on this path.
+   - Branch with the edits in place. The name carries no `<NNN>` on purpose, so it is never
+     mistaken for pipeline work:
+
+     ```bash
+     git switch -c "chore/roadmap-<slug>"
+     git add specs/lite/roadmap.md research/ 2>/dev/null
+     git commit -m "chore(roadmap): <summary>"
+     git push -u origin "chore/roadmap-<slug>"
+     ```
+
+   - **Open the PR** with the same backend detection `speclite-ship` uses (`git remote -v`:
+     Bitbucket host → `bkt pr create`, otherwise `gh pr create`). Body: what changed (ids +
+     titles), why, and any `research/` file.
+   - **Return to trunk** so the pipeline is not left on a non-pipeline branch:
+
+     ```bash
+     git switch "<trunk>"
+     ```
+
+   - No remote, or no `gh`/`bkt` → keep the commit on the branch (push it if a remote
+     exists), print a ready-to-paste PR title + body, and still return to trunk.
+
+   **Opt-in — direct to trunk** (only when `specs/lite/rules.md` says roadmap edits may
+   commit straight to trunk):
    - **Commit** with the roadmap scope:
 
      ```bash
+     git add specs/lite/roadmap.md research/ 2>/dev/null
      git commit -m "chore(roadmap): <summary>"
      ```
 
@@ -124,13 +158,10 @@ branch, no plan, no PR — commit on trunk and push, behind defensive checks.
 
      A **rejected push** or a rebase conflict → **pause and ask**; never force-push.
 
-   **Rules opt-in:** if `specs/lite/rules.md` says roadmap edits require a branch + PR, take
-   that path instead — branch `chore/roadmap-<slug>`, commit, push, open the PR with the same
-   backend detection `speclite-ship` uses (`gh` for GitHub, `bkt` for Bitbucket) — and do not
-   commit on trunk.
-
 6. **Report**: the flow run, items added/changed (ids + titles), any research file written,
-   and whether the change was committed and pushed.
+   and what happened to the change — PR url (or the branch + ready-to-paste body), or the
+   trunk commit on the opt-in path. On the PR path, say that new items become plannable
+   (`/speclite-plan`) once the PR merges.
 
 ## Boundaries
 
@@ -139,5 +170,6 @@ branch, no plan, no PR — commit on trunk and push, behind defensive checks.
 - Never edits items that are `PLANNED`/`WIP`/`BUILT`/`SHIPPED`.
 - Never dispatched by `speclite-run` — the loop does not shape its own backlog.
 - Does not write plans or implement anything; `/speclite-plan` turns an item into work.
+- Never merges its own PR, and never commits on trunk unless `rules.md` opts in.
 - Pauses and asks on a dirty tree, a non-trunk branch, or a rejected push — never guesses,
   never force-pushes.
