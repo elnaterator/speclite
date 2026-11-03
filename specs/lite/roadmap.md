@@ -134,7 +134,7 @@ Ship the installer as an npm package so users without the repo run one always-cu
 command. Release workflow on tag. Add basic update instructions to the `specs/lite/README.md`
 that `speclite-init` writes. Notes: `research/version-management.md`.
 
-## 023 Roadmap edits go through a branch + PR by default - BUILT
+## 023 Roadmap edits go through a branch + PR by default - SHIPPED
 
 `speclite-roadmap` commits and pushes roadmap edits straight to trunk by default. Roadmap
 changes deserve review like any other change: default to a `chore/roadmap-<slug>` branch +
