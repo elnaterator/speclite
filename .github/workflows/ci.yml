@@ -58,6 +58,10 @@ jobs:
           node bin/install.js update --dry-run
           node bin/install.js doctor
 
+      # What `npm publish` would ship — the release workflow publishes exactly this.
+      - name: npm pack contents
+        run: npm pack --dry-run
+
   markdown:
     name: markdown lint
     runs-on: ubuntu-latest

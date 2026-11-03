@@ -12,4 +12,6 @@ drift (`node bin/version.js --check`).
   `docs`/`chore`/`ci`/`test`/`refactor`/`style`/`build` → no bump. Breaking change → minor
   while `0.x`.
 - After the PR merges, tag trunk: `git checkout main && git pull && make tag`, then
-  `git push origin v<version>`.
+  `git push origin v<version>`. The tag push runs `.github/workflows/release.yml`, which
+  checks the tag matches `package.json` and publishes `speclite` to npm (needs the
+  `NPM_TOKEN` repo secret). Only bumped versions get tagged — npm refuses a republish.

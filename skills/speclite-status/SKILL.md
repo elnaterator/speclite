@@ -107,7 +107,7 @@ time as a daily check or to preview the loop before committing to a loop mode.
    - Mode, and the halt marker + reason if present.
    - Open PR (number/title/state/url) or "none".
    - speclite version from Step 3, plus the hint: run
-     `npx -y github:elnaterator/speclite -- doctor` to check for stale or conflicting copies.
+     `npx speclite@latest doctor` to check for stale or conflicting copies.
    - **Next:** the dry-run action from Step 4, labeled clearly as a preview (suggest running
      `/speclite-run` to actually advance).
 

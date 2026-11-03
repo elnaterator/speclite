@@ -1,149 +1,226 @@
 # speclite
 
 [![CI](https://github.com/elnaterator/speclite/actions/workflows/ci.yml/badge.svg)](https://github.com/elnaterator/speclite/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/speclite)](https://www.npmjs.com/package/speclite)
 
-**Spec-driven development without the ceremony.** A roadmap of work items, a short plan per
-item, one git branch per item — driven by a handful of slash-command skills. No binary, no build step, no config sprawl. Just
-markdown and git.
+**Spec-driven development for AI coding agents, without the ceremony.**
 
-You write a one-line roadmap item; speclite plans it, branches it, builds it, and opens the
-PR — pausing at every gate where a human should look.
+AI agents write code fast but drift from what you meant, forget context between sessions, and
+blur the line between "done" and "shipped". speclite gives them a lightweight track to run
+on: a roadmap of one-line items, a short plan per item with acceptance criteria, and one git
+branch and PR per item — with a human checkpoint at every gate that matters.
 
 ```text
-/speclite-init   scaffold specs/lite/
-/speclite-plan   pick next item → branch → write a plan
-/speclite-build  build it → mark BUILT
-/speclite-ship   commit, push, open a PR
+roadmap item → plan → build → review → PR
 ```
 
-## What it does
+It is just markdown skills plus git. No server, no database, no build step.
 
-| Skill | Does |
-|-------|------|
-| `speclite-init` | Create `specs/lite/` with roadmap, plan template + rules (idempotent) |
-| `speclite-plan` | Pick the next backlog item, branch, write a plan, mark PLANNED |
-| `speclite-build` | Build the branch's plan; mark WIP → BUILT |
-| `speclite-review` | Review the branch diff vs the plan's acceptance criteria; flag drift |
-| `speclite-ship` | Plan-completeness check, commit, push, open a PR, mark SHIPPED |
-| `speclite-run` | Dispatcher: read state, run the right next skill, halt at gates |
-| `speclite-mode` | Set the mode: default / semi-auto / full-auto |
-| `speclite-status` | Read-only: print pipeline state + a dry-run of what `run` would do |
-| `speclite-roadmap` | Shape the roadmap: investigate an idea, add items, groom the backlog |
+## Why speclite
 
-Each work item moves through a simple lifecycle, with **status stored as the roadmap heading
-suffix** (the single source of truth):
+- **Your agent stays on intent.** Every change starts from a written plan with testable
+  acceptance criteria, and a review step checks the diff against it before anything is
+  committed — missing criteria, scope creep, and unverified claims get flagged.
+- **State survives the session.** Status lives in the roadmap file and the branch name, not
+  in the chat. Close the session, switch agents, come back next week — `/speclite-run` picks
+  up exactly where you left off.
+- **You stay in control.** By default each step is one command you run. Turn on a loop mode
+  and it runs itself, but still stops before the commit (or after the PR) — it never merges.
+- **Small and portable.** Works in any git repo, new or existing, with Claude Code, GitHub
+  Copilot, Cursor, Codex, OpenCode, or Kiro. Rules for your project go in one file.
+
+## Quick start
+
+**1. Install** (Node 16+; detects which agents you have):
+
+```bash
+npx speclite@latest --all
+```
+
+Restart your agent so it picks up the skills.
+
+**2. Set up a repo** — in your agent, from the repo root:
+
+```text
+/speclite-init
+```
+
+This creates `specs/lite/` with a roadmap, a plan template, and a rules file. It never
+overwrites anything.
+
+**3. Add work:**
+
+```text
+/speclite-roadmap add rate-limit the login endpoint
+```
+
+This writes item `001` to `specs/lite/roadmap.md` and commits it to your main branch (and
+pushes, if you have a remote — say "don't push" to keep it local). Prefer to type it
+yourself? Add a `## 001 <title>` heading to the roadmap by hand.
+
+**4. Run it:**
+
+```text
+/speclite-run
+```
+
+Run it again after each step, or turn on [autopilot](#autopilot-loop-modes). You end up with
+a branch `feat/001-login-rate-limit`, a plan at `specs/lite/001-login-rate-limit-plan.md`,
+the code, a review against the plan, and a PR.
+
+## What you get
+
+A roadmap where each heading's suffix is the item's status:
+
+```markdown
+## 001 Rate-limit the login endpoint - SHIPPED
+
+Cap failed logins per IP and per account. Return 429 with Retry-After.
+
+## 002 Password reset via email - WIP
+
+## 003 Audit log for admin actions
+```
+
+And a plan per item, written before any code:
+
+```markdown
+# Plan: 002 Password reset via email
+
+## Acceptance criteria
+
+- [ ] Reset link expires after 30 minutes and works once
+- [ ] Unknown emails get the same response as known ones (no account enumeration)
+- [ ] Integration test covers request → email → reset → login
+
+## Steps
+
+- [ ] Token table + expiry
+- [ ] POST /password-reset, POST /password-reset/confirm
+- [ ] Email template + send
+```
+
+Each item moves through one lifecycle:
 
 ```text
 (backlog) → PLANNED → WIP → BUILT → SHIPPED
 ```
 
-`BUILT` means code complete and verified locally — **not merged**. `SHIPPED` means committed,
-pushed, PR open. Default is 1 roadmap item =
-1 plan = 1 branch (`<type>/<NNN>-<slug>`), but the skills stay flexible to your request.
+`BUILT` = code complete and verified locally, not committed. `SHIPPED` = committed, pushed,
+PR open. Merging is always yours.
 
-## Install
-
-speclite runs as a plugin on **Claude Code**, **GitHub Copilot** (CLI + VS Code), and
-**Cursor**, as a Codex plugin, and as an Agent Skills directory on **OpenCode** and **Kiro
-CLI**. One
-cross-platform installer ([`bin/install.js`](./bin/install.js), pure Node, zero deps) handles
-every target — no clone needed:
-
-```bash
-# install for every agent detected on your machine:
-npx -y github:elnaterator/speclite -- --all
-
-# or a single agent (claude | copilot | cursor | codex | opencode | kiro):
-npx -y github:elnaterator/speclite -- --only copilot
-```
-
-Check for stale or duplicate copies with `npx -y github:elnaterator/speclite -- doctor`
-(`--fix` to prune), and refresh everything you installed with `… -- update`.
-
-See [docs/INSTALL.md](./docs/INSTALL.md) for per-agent setup, the Makefile flow, preview flags,
-and the compatibility matrix.
-
-## Usage
-
-In any repo, scaffold the workspace, add a roadmap item, then run the pipeline:
-
-```bash
-/speclite-init        # creates specs/lite/ (roadmap, plan-template, rules)
-# edit specs/lite/roadmap.md — add a one-line item under a `## 00N <title>` heading
-/speclite-plan        # picks the item, makes a branch, writes specs/lite/00N-<slug>-plan.md
-/speclite-build       # builds the plan on that branch, marks the item BUILT
-/speclite-ship        # commits, pushes, opens a PR
-```
-
-Not sure what's next? `/speclite-run` reads the roadmap + git state and runs the right step.
-
-## Loop modes (optional)
-
-By default you drive the pipeline one skill at a time. A loop mode chains them for you. Pick a
-mode with `/speclite-mode` (stored in `specs/lite/.mode`):
-
-```bash
-/speclite-mode semi-auto   # loop, but halt before commit (you run /speclite-ship)
-/speclite-mode full-auto   # loop AND auto commit + push + open PR, halt after the PR
-/speclite-mode default     # off — drive the pipeline manually
-/speclite-run              # plan → (Stop hook) → build → halt at the gate for your mode
-```
-
-- `speclite-run` is a pure **state-machine dispatcher** over the roadmap status plus git
-  state. Each run advances the pipeline by one step or **halts**.
-- One brain decides whether to keep going: `hooks/loop-check.sh` reads `.mode` + `.halt` and
-  exits 0 (continue) or 1 (stop, printing the reason). Every driver is a thin wrapper over it.
-- On platforms with a blocking Stop hook (Claude Code, Copilot, Cursor), the bundled
-  `hooks/mode-stop.sh` calls that brain and re-triggers `speclite-run` after each step.
-- **Codex** gets the same thing in its own dialect: speclite installs as a Codex plugin and
-  registers `hooks/mode-stop-codex.sh`, which emits `reason` only (Codex rejects a Stop
-  payload carrying `additionalContext`, and turns `reason` into the next prompt). Trust the
-  hook once via `/hooks` before it will run.
-- **OpenCode** has no stop hook, but its plugin API does: `plugins/opencode/speclite-loop.js`
-  watches `session.idle` and re-prompts the session through the SDK client. Interactive only.
-- **Kiro CLI** (V3 engine) honors a Stop block reply, so the installer copies
-  `hooks/` to `~/.kiro/speclite/hooks/` and registers `mode-stop-kiro.sh` (`reason` only, like
-  Codex — Kiro ignores a block carrying `hookSpecificOutput`) by absolute path in
-  `~/.kiro/hooks/speclite-stop.json`. Run `kiro-cli chat --v3`; Kiro IDE cannot block Stop.
-- Anywhere hook-less or headless, drive the same loop from the shell with
-  [`bin/loop.sh`](./bin/loop.sh) — a fresh session per iteration, which is safe because
-  `speclite-run` is stateless:
-
-  ```bash
-  bin/loop.sh --agent "codex exec"      # or: --agent "opencode run"
-  ```
-
-  It is do-while on purpose: the first iteration runs unconditionally (setting a mode writes
-  `.halt`, so the loop never self-starts), then the brain decides each subsequent one.
-  `--max-iterations` caps a runaway loop.
-- **semi-auto** never commits, pushes, or opens a PR — it halts at the pre-commit gate (item
-  `BUILT`); you run `/speclite-ship`. **full-auto** crosses that gate: `speclite-run`
-  dispatches `/speclite-ship` at `BUILT` and halts after the PR is opened (it never merges).
-  Setting full-auto warns you of that risk first.
-- Either mode halts and asks on any ambiguous or unsafe state (dirty tree, off-trunk, branch
-  without `<NNN>`, missing item).
-- No infinite loop: every halt writes `specs/lite/.halt`, which tells the Stop hook
-  to let the session end. Both markers are git-ignored.
-
-## How it's laid out
+Everything lives in one directory:
 
 ```text
 specs/lite/
-  roadmap.md            # ordered items, ids 001, 002, … status in the title suffix
-  plan-template.md      # template for per-item plans
-  rules.md              # per-project instructions every skill reads first (overrides defaults)
-  00N-<slug>-plan.md    # one plan per item being worked
+  roadmap.md            # ordered items 001, 002, … status in the heading suffix
+  plan-template.md      # shape of every plan
+  rules.md              # your project's instructions; every skill reads it first
+  00N-<slug>-plan.md    # one plan per item
 ```
 
-Branches follow `<type>/<NNN>-<slug>` (type ∈ feat, fix, chore, docs, refactor, perf, test,
-build, ci, style, revert). Trunk is auto-detected via `origin/HEAD`.
+Default is 1 item = 1 plan = 1 branch, named `<type>/<NNN>-<slug>` (`feat`, `fix`, `docs`,
+`chore`, …), but ask for something else and the skills follow. Trunk is auto-detected.
+
+## Skills
+
+| Skill | Does |
+|-------|------|
+| `speclite-init` | Create `specs/lite/` with roadmap, plan template + rules (idempotent) |
+| `speclite-roadmap` | Shape the roadmap: investigate an idea, add items, groom the backlog |
+| `speclite-plan` | Pick the next backlog item, branch, write a plan, mark PLANNED |
+| `speclite-build` | Build the branch's plan; mark WIP → BUILT |
+| `speclite-review` | Review the branch diff vs the plan's acceptance criteria; flag drift |
+| `speclite-ship` | Plan-completeness check, commit, push, open a PR, mark SHIPPED |
+| `speclite-run` | Read the state and run the right next skill; halt at gates |
+| `speclite-mode` | Set the mode: default / semi-auto / full-auto |
+| `speclite-status` | Read-only: where you are, and what `run` would do next |
+
+## Autopilot (loop modes)
+
+Pick how far speclite goes on its own with `/speclite-mode`, then start it with
+`/speclite-run`:
+
+| Mode | Runs by itself | Stops at |
+|------|----------------|----------|
+| `default` | nothing — one step per `/speclite-run` | after each step |
+| `semi-auto` | plan → build → review | before commit — you run `/speclite-ship` |
+| `full-auto` | plan → build → review → commit → push → PR | after the PR is open |
+
+Guarantees in every mode:
+
+- **Never merges**, and never commits on its own unless you chose `full-auto`.
+- **Halts and asks** on anything ambiguous: dirty working tree, unexpected branch, missing
+  roadmap item.
+- **Always terminates** — every stop is recorded in `specs/lite/.halt`, and setting a mode
+  never starts the loop by itself.
+- In `full-auto`, a failed review is auto-fixed and re-checked up to 3 times, then halts
+  rather than commit broken work.
+
+How the loop is driven on each platform: [docs/LOOP.md](./docs/LOOP.md).
+
+## Platforms
+
+| Agent | Install | Autopilot |
+|-------|---------|-----------|
+| Claude Code | `--only claude` | ✓ Stop hook |
+| GitHub Copilot (CLI + VS Code) | `--only copilot` | ✓ Stop hook |
+| Cursor | `--only cursor` | ✓ Stop hook |
+| Codex (CLI + desktop) | `--only codex` | ✓ Stop hook — trust it once via `/hooks` |
+| OpenCode | `--only opencode` | ✓ interactive sessions |
+| Kiro CLI | `--only kiro` | ✓ with `kiro-cli chat --v3` |
+| Anything else / headless | — | [`bin/loop.sh`](./bin/loop.sh) |
+
+```bash
+npx speclite@latest --only cursor      # one agent
+npx speclite@latest --list             # what's detected
+```
+
+Per-agent details: [docs/INSTALL.md](./docs/INSTALL.md).
+
+## Keeping current
+
+```bash
+npx speclite@latest update     # update everything you installed
+npx speclite@latest doctor     # find stale or duplicate copies (--fix to prune)
+npx speclite@latest version    # what is installed where
+```
+
+## Customize
+
+`specs/lite/rules.md` is read first by every skill and overrides its defaults. Plain
+sentences work:
+
+```markdown
+- Run `make test` before marking anything BUILT.
+- Roadmap edits go through a branch + PR, not straight to main.
+- Bump the version in the same PR: feat → minor, fix → patch.
+```
+
+## FAQ
+
+**Can I use it in an existing repo?** Yes. `/speclite-init` only adds `specs/lite/` and never
+overwrites files.
+
+**Does it work for a team?** The roadmap and plans are committed files, and every item gets
+its own branch and PR, so it fits normal review flow. Loop mode markers are per-machine and
+git-ignored.
+
+**GitHub only?** No — `speclite-ship` detects the remote and opens PRs with `gh` (GitHub) or
+[`bkt`](https://github.com/avivsinai/bitbucket-cli) (Bitbucket).
+
+**What does autopilot cost?** Each loop step is an ordinary agent turn — the same tokens as
+running the skills by hand, without the waiting.
+
+**How is this different from heavier spec frameworks?** speclite keeps one short plan per
+item and no extra tooling. If a feature needs a requirements doc, write it and link it from
+the roadmap item.
 
 ## Contributing
 
-speclite dogfoods itself — its own roadmap lives in
-[`specs/lite/roadmap.md`](./specs/lite/roadmap.md). For dev install/iteration loops, the
-template two-copy pattern, core invariants, and conventions, see
-[CONTRIBUTING.md](./CONTRIBUTING.md).
+speclite builds itself with speclite — its own roadmap lives in
+[`specs/lite/roadmap.md`](./specs/lite/roadmap.md). Dev setup, core invariants, and
+conventions: [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 

@@ -55,7 +55,7 @@ Two consequences when editing templates:
 
 ## Editing & testing the plugin
 
-**One installer:** `bin/install.js` (pure Node stdlib, zero deps) drives every target via a `TARGETS` registry (`claude` / `copilot` / `cursor`). Flags: `--only <id>` (repeatable), `--all`, `--source <owner/repo|path|git-url>` (auto-detected: `.git` present → local checkout, else canonical `elnaterator/speclite`), `--dry-run`, `--uninstall`, `--list`. Subcommands `version` / `doctor [--fix]` / `update` read the install manifest `~/.speclite/installs.json` (`SPECLITE_HOME` overrides; written after each real install, entry dropped on uninstall, never on `--dry-run`). New target → give it `installedPath()` so `doctor` can spot a vanished install. Makefile delegates (`make install-copilot` etc.). npx one-liner: `npx -y github:elnaterator/speclite -- --only copilot`. Add a new agent = append one `TARGETS` entry; `main()` unchanged.
+**One installer:** `bin/install.js` (pure Node stdlib, zero deps) drives every target via a `TARGETS` registry (`claude` / `copilot` / `cursor`). Flags: `--only <id>` (repeatable), `--all`, `--source <owner/repo|path|git-url>` (auto-detected: `.git` present → local checkout, else canonical `elnaterator/speclite`), `--dry-run`, `--uninstall`, `--list`. Subcommands `version` / `doctor [--fix]` / `update` read the install manifest `~/.speclite/installs.json` (`SPECLITE_HOME` overrides; written after each real install, entry dropped on uninstall, never on `--dry-run`). New target → give it `installedPath()` so `doctor` can spot a vanished install. Makefile delegates (`make install-copilot` etc.). npx one-liner: `npx speclite@latest --only copilot`. Add a new agent = append one `TARGETS` entry; `main()` unchanged.
 
 **GitHub Copilot (CLI + VS Code):** one `copilot` target. `copilot plugin marketplace add <src>` + `copilot plugin install speclite@speclite` lands in the **shared** `~/.copilot/installed-plugins/<marketplace>/<plugin>/` location, which VS Code Copilot auto-discovers — one install, two surfaces. VS Code additionally needs `chat.plugins.enabled: true` (installer merges it into user `settings.json`, JSONC-tolerant, preserves other keys). Verified (copilot CLI 1.0.47): the existing `.claude-plugin/marketplace.json` is accepted **verbatim** — no `.github/` manifest, no Copilot-format fork. Fallback when no `copilot` CLI but VS Code present: copy + register `chat.pluginLocations`. Stop hook works because speclite stays Claude-format; VS Code ignores hook matchers.
 
@@ -97,6 +97,14 @@ dependencies (Node + `npx` only):
   status suffixes like `` ` - PLANNED` `` carry a meaningful leading space. Everything else
   is enforced; fix violations rather than widening the waiver list.
 
+- **npm pack** — `npm pack --dry-run` shows what would publish. `package.json` `files` is a
+  whitelist: a new top-level dir the installer copies must be added there, or npm users
+  (`npx speclite@latest`) won't get it.
+
+**Release** — `.github/workflows/release.yml` runs on a `v*` tag push: tag must equal
+`v<package.json version>`, then version check + installer dry-run + `npm publish
+--provenance` (secret `NPM_TOKEN`).
+
 Run the same checks locally:
 
 ```bash
@@ -111,5 +119,5 @@ roadmap commit.
 ## Conventions in this repo
 
 - Commit scope = roadmap id: `<type>(<NNN>): <summary>`.
-- `docs/QUESTIONS.md` records design decisions + rationale; `docs/design.md` = original prompt-flow sketch. Consult before reworking workflow semantics.
+- `docs/QUESTIONS.md` records design decisions + rationale; `docs/design.md` = original prompt-flow sketch. `docs/LOOP.md` = loop-mode internals per platform (kept out of the user-facing README). Consult before reworking workflow semantics.
 - `research/` = one article per topic (platform research, parallel-work ideas, open-source plan). Roadmap items stay concise and link here; the roadmap skill (015) creates/updates these.
