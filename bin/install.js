@@ -289,6 +289,35 @@ const CODEX_CACHE_DIR = () =>
 const COPILOT_PLUGIN_DIR = () =>
   path.join(os.homedir(), ".copilot", "installed-plugins", MARKETPLACE, PLUGIN_NAME);
 
+// The speclite entry from `claude plugin marketplace list --json`, or null when it is not
+// registered. Each entry carries `source` ("directory" | "github" | "git" …) plus `path`,
+// `repo` or `url`.
+function claudeMarketplaceEntry() {
+  const listed = spawnSync("claude", ["plugin", "marketplace", "list", "--json"], {
+    encoding: "utf8",
+  });
+  try {
+    const entries = JSON.parse(listed.stdout || "[]");
+    return (Array.isArray(entries) && entries.find((e) => e.name === MARKETPLACE)) || null;
+  } catch {
+    return null;
+  }
+}
+
+function claudeSourceMatches(entry, source) {
+  const bare = (s) =>
+    String(s || "")
+      .replace(/^https?:\/\/github\.com\//, "")
+      .replace(/\.git$/, "")
+      .replace(/\/$/, "");
+  if (entry.path) {
+    return fs.existsSync(source) && path.resolve(entry.path) === path.resolve(source);
+  }
+  const registered = entry.repo || entry.url;
+  // Unknown entry shape: assume it matches rather than churn the registration.
+  return !registered || bare(registered) === bare(source);
+}
+
 function installClaude(ctx) {
   if (!hasCmd("claude")) {
     if (!ctx.dry) {
@@ -296,11 +325,19 @@ function installClaude(ctx) {
     }
     warn("  [dry-run] claude CLI not found — preview only");
   }
-  const listed = ctx.dry
-    ? {}
-    : spawnSync("claude", ["plugin", "marketplace", "list"], { encoding: "utf8" });
-  const registered = listed.stdout && listed.stdout.includes(MARKETPLACE);
-  if (!registered) {
+  const entry = ctx.dry ? null : claudeMarketplaceEntry();
+  if (entry && !claudeSourceMatches(entry, ctx.source)) {
+    // Registered against another source (e.g. a local checkout, while this run installs
+    // from GitHub): `marketplace update` would refresh that old source, not this one.
+    warn("  marketplace registered against a different source — re-registering");
+    runSpawn("claude", ["plugin", "uninstall", `${PLUGIN_NAME}@${MARKETPLACE}`], ctx, {
+      ignoreFailure: true,
+    });
+    runSpawn("claude", ["plugin", "marketplace", "remove", MARKETPLACE], ctx, {
+      ignoreFailure: true,
+    });
+  }
+  if (!entry || !claudeSourceMatches(entry, ctx.source)) {
     runSpawn("claude", ["plugin", "marketplace", "add", ctx.source], ctx);
   }
   const updated = runSpawn("claude", ["plugin", "marketplace", "update", MARKETPLACE], ctx, {
@@ -628,12 +665,19 @@ function installCodex(ctx) {
     }
     warn("  [dry-run] codex CLI not found — preview only");
   }
-  if (ctx.dry || !codexMarketplaceRegistered()) {
-    runSpawn("codex", ["plugin", "marketplace", "add", ctx.source], ctx);
-  }
+  // Always re-register (same pattern as Copilot). A git marketplace is a frozen snapshot
+  // under ~/.codex/.tmp/marketplaces/ that `plugin add` reads from — reusing an existing
+  // registration reinstalls whatever version was cloned first. Re-adding also follows a
+  // changed --source (git ↔ local checkout). Plugin goes first so the marketplace is free.
   runSpawn("codex", ["plugin", "remove", `${PLUGIN_NAME}@${MARKETPLACE}`], ctx, {
     ignoreFailure: true,
   });
+  if (!ctx.dry && codexMarketplaceRegistered()) {
+    runSpawn("codex", ["plugin", "marketplace", "remove", MARKETPLACE], ctx, {
+      ignoreFailure: true,
+    });
+  }
+  runSpawn("codex", ["plugin", "marketplace", "add", ctx.source], ctx);
   runSpawn("codex", ["plugin", "add", `${PLUGIN_NAME}@${MARKETPLACE}`], ctx);
   pruneLegacyCodexSkills(ctx);
   log("  Restart Codex to pick up the skills.");
