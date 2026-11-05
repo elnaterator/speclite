@@ -141,7 +141,7 @@ changes deserve review like any other change: default to a `chore/roadmap-<slug>
 PR, return to trunk afterwards, and make direct-to-trunk the `rules.md` opt-in instead.
 Notes: `research/roadmap-skill.md`.
 
-## 024 Installer refreshes stale marketplace registrations - BUILT
+## 024 Installer refreshes stale marketplace registrations - SHIPPED
 
 Reinstalling Codex reused a frozen git marketplace snapshot (stuck at 0.3.0), so `doctor`'s
 "reinstall with `--only codex`" fix never worked. Codex now re-registers the marketplace on
